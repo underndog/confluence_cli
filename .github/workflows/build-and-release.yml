@@ -43,8 +43,8 @@ jobs:
       - name: Build binary for Linux
         run: |
           GOOS=linux GOARCH=amd64 go build -o confluence_cli
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+      - name: Upload artifact Linux
+        uses: actions/upload-artifact@v3
         with:
           name: confluence_cli
           path: confluence_cli
@@ -58,14 +58,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: confluence_cli
-      - name: Display structure of downloaded files
-        run: ls -R
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          artifacts: "artifacts/confluence_cli-windows,artifacts/confluence_cli"
-          tag: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          draft: false
-          prerelease: false
+      # - name: Display structure of downloaded files
+      #   run: ls -R
+      # - name: Create Release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     artifacts: "artifacts/confluence_cli"
+      #     tag: ${{ github.ref_name }}
+      #     name: "Release ${{ github.ref_name }}"
+      #     draft: false
+      #     prerelease: false
