@@ -14,7 +14,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16' # Replace with your Go version
+          go-version: '1.21' # Replace with your Go version
+      - name: Tidy Go modules
+        run: go mod tidy
       - name: Build binary for Windows
         run: |
           GOOS=windows GOARCH=amd64 go build -o confluence_cli-windows.exe
@@ -32,7 +34,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16' # Replace with your Go version
+          go-version: '1.21' # Replace with your Go version
+      - name: Tidy Go modules
+        run: go mod tidy
       - name: Build binary for Linux
         run: |
           GOOS=linux GOARCH=amd64 go build -o confluence_cli
