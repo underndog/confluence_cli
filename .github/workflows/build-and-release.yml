@@ -64,8 +64,8 @@ jobs:
           tag: ${{ github.ref_name }}
         run: |
           gh release create "$tag" \
-              "${{ github.workspace }}/artifacts/confluence_cli-windows" \
-              "${{ github.workspace }}/artifacts/confluence_cli" \
+              "artifacts/confluence_cli-windows" \
+              "artifacts/confluence_cli" \
               --repo="$GITHUB_REPOSITORY" \
               --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
               --generate-notes
