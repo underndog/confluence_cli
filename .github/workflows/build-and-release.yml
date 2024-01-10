@@ -49,22 +49,22 @@ jobs:
           name: confluence_cli
           path: confluence_cli
 
-  create-release:
+  release:
+    name: Release pushed tag
     needs: [build-windows, build-linux]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-      - name: Create and Upload Release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: ${{ secrets.MY_GITHUB_TOKEN }}
-          automatic_release_tag: ${{ github.ref_name }}
-          title: "Release ${{ github.ref_name }}"
-          draft: false
-          prerelease: false
-          files: |
-            artifacts/confluence_cli-windows
-            artifacts/confluence_cli
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: |
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+              --generate-notes \
+              --files artifacts/confluence_cli-windows artifacts/confluence_cli
