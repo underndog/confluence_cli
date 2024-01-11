@@ -81,7 +81,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-          artifacts: "confluence_cli,confluence_cli-windows"
+          artifacts: "confluence_cli,confluence_cli-windows.exe"
           tag: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
           draft: false
