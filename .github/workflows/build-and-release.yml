@@ -46,7 +46,7 @@ jobs:
       - name: Display structure
         run: ls -la
       - name: Upload artifact Linux
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: confluence_cli
           path: confluence_cli
