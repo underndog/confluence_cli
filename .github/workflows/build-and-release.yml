@@ -6,30 +6,32 @@ on:
       - '*'
 
 jobs:
-  # build-windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v4
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version: '1.21' # Replace with your Go version
-  #     - name: Tidy Go modules
-  #       run: go mod tidy
-  #     - name: Build binary for Windows
-  #       run: |
-  #         $env:GOOS = "windows"
-  #         $env:GOARCH = "amd64"
-  #         go build -o confluence_cli-windows.exe
-  #       shell: powershell
-  #     - name: Upload artifact
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: confluence_cli-windows
-  #         path: confluence_cli-windows.exe
+  build-windows:
+    name: Build Linux Binary File
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21' # Replace with your Go version
+      - name: Tidy Go modules
+        run: go mod tidy
+      - name: Build binary for Windows
+        run: |
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          go build -o confluence_cli-windows.exe
+        shell: powershell
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: confluence_cli-windows
+          path: confluence_cli-windows.exe
 
   build-linux:
+    name: Build Linux Binary File
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -61,15 +63,18 @@ jobs:
       #     prerelease: false
 
   create-release:
-    # needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux]
     name: Release Project
-    needs: build-linux
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: confluence_cli
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: confluence_cli-windows
       - name: Display structure of downloaded files
         run: ls -R
   #     # - name: Create Release
