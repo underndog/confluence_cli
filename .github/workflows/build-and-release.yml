@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build Linux Binary File
+    name: Build Linux Windows File
     runs-on: windows-latest
     steps:
       - name: Check out code
