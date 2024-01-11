@@ -77,12 +77,12 @@ jobs:
           name: confluence_cli-windows
       - name: Display structure of downloaded files
         run: ls -R
-  #     # - name: Create Release
-  #     #   uses: ncipollo/release-action@v1
-  #     #   with:
-  #     #     token: ${{ secrets.MY_GITHUB_TOKEN }}
-  #     #     artifacts: "artifacts/confluence_cli"
-  #     #     tag: ${{ github.ref_name }}
-  #     #     name: "Release ${{ github.ref_name }}"
-  #     #     draft: false
-  #     #     prerelease: false
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          artifacts: "confluence_cli,confluence_cli-windows"
+          tag: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
