@@ -45,31 +45,38 @@ jobs:
           GOOS=linux GOARCH=amd64 go build -o confluence_cli
       - name: Display structure
         run: ls -la
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          bodyFile: "confluence_cli"
+          tag: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
       - name: Upload artifact Linux
         uses: actions/upload-artifact@v3
         with:
           name: confluencecli
           path: confluence_cli
-      - name: Wait for 60 seconds
-        run: sleep 60
 
-  create-release:
-    # needs: [build-windows, build-linux]
-    needs: [build-linux]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: confluencecli
-      - name: Display structure of downloaded files
-        run: ls -la
-      # - name: Create Release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     token: ${{ secrets.MY_GITHUB_TOKEN }}
-      #     artifacts: "artifacts/confluence_cli"
-      #     tag: ${{ github.ref_name }}
-      #     name: "Release ${{ github.ref_name }}"
-      #     draft: false
-      #     prerelease: false
+  # create-release:
+  #   # needs: [build-windows, build-linux]
+  #   needs: [build-linux]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: confluencecli
+  #     - name: Display structure of downloaded files
+  #       run: ls -la
+  #     # - name: Create Release
+  #     #   uses: ncipollo/release-action@v1
+  #     #   with:
+  #     #     token: ${{ secrets.MY_GITHUB_TOKEN }}
+  #     #     artifacts: "artifacts/confluence_cli"
+  #     #     tag: ${{ github.ref_name }}
+  #     #     name: "Release ${{ github.ref_name }}"
+  #     #     draft: false
+  #     #     prerelease: false
