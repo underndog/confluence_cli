@@ -60,17 +60,18 @@ jobs:
           draft: false
           prerelease: false
 
-  # create-release:
-  #   # needs: [build-windows, build-linux]
-  #   needs: [build-linux]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: confluencecli
-  #     - name: Display structure of downloaded files
-  #       run: ls -la
+  create-release:
+    # needs: [build-windows, build-linux]
+    name: Release Project
+    needs: build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: confluence_cli
+      - name: Display structure of downloaded files
+        run: ls -R
   #     # - name: Create Release
   #     #   uses: ncipollo/release-action@v1
   #     #   with:
