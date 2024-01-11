@@ -43,13 +43,15 @@ jobs:
       - name: Build binary for Linux
         run: |
           GOOS=linux GOARCH=amd64 go build -o confluence_cli
+      - name: Display structure
+        run: ls -la
       - name: Upload artifact Linux
         uses: actions/upload-artifact@v3
         with:
           name: confluence_cli
           path: confluence_cli
-      - name: Wait for 10 seconds
-        run: sleep 10
+      - name: Wait for 30 seconds
+        run: sleep 30
 
   create-release:
     # needs: [build-windows, build-linux]
