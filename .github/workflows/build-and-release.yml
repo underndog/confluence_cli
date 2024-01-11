@@ -46,8 +46,10 @@ jobs:
       - name: Upload artifact Linux
         uses: actions/upload-artifact@v3
         with:
-          name: confluence-cli
+          name: confluence_cli
           path: confluence_cli
+      - name: Wait for 10 seconds
+        run: sleep 10
 
   create-release:
     # needs: [build-windows, build-linux]
@@ -57,7 +59,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: confluence-cli
+          name: confluence_cli
       - name: Display structure of downloaded files
         run: ls -la
       # - name: Create Release
