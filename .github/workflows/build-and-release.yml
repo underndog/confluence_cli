@@ -45,20 +45,20 @@ jobs:
           GOOS=linux GOARCH=amd64 go build -o confluence_cli
       - name: Display structure
         run: ls -la
+      - name: Upload artifact Linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: confluence_cli
+          path: confluence_cli
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
-          bodyFile: "confluence_cli"
+          artifacts: "confluence_cli"
           tag: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
           draft: false
           prerelease: false
-      - name: Upload artifact Linux
-        uses: actions/upload-artifact@v3
-        with:
-          name: confluencecli
-          path: confluence_cli
 
   # create-release:
   #   # needs: [build-windows, build-linux]
