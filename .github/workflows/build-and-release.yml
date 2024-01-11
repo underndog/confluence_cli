@@ -50,15 +50,15 @@ jobs:
         with:
           name: confluence_cli
           path: confluence_cli
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
-          artifacts: "confluence_cli"
-          tag: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          draft: false
-          prerelease: false
+      # - name: Create Release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     token: ${{ secrets.MY_GITHUB_TOKEN }}
+      #     artifacts: "confluence_cli"
+      #     tag: ${{ github.ref_name }}
+      #     name: "Release ${{ github.ref_name }}"
+      #     draft: false
+      #     prerelease: false
 
   create-release:
     # needs: [build-windows, build-linux]
