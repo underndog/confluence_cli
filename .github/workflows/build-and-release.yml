@@ -50,8 +50,8 @@ jobs:
         with:
           name: confluence_cli
           path: confluence_cli
-      - name: Wait for 30 seconds
-        run: sleep 30
+      - name: Wait for 60 seconds
+        run: sleep 60
 
   create-release:
     # needs: [build-windows, build-linux]
