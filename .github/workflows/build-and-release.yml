@@ -67,11 +67,11 @@ jobs:
     name: Release Project
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifact
+      - name: Download artifact Linux
         uses: actions/download-artifact@v4
         with:
           name: confluence_cli
-      - name: Download artifact
+      - name: Download artifact Windows
         uses: actions/download-artifact@v4
         with:
           name: confluence_cli-windows
