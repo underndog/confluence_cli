@@ -47,7 +47,7 @@ On windows
 ```shell
 go build -o confluence_cli.exe
 
-.\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-from-value-file hihi1
+.\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-value-from-file hihi1
 ```
 
 

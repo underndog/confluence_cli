@@ -1,6 +1,7 @@
 package confluence_actions
 
 import (
+	"confluence_cli/helper"
 	"confluence_cli/helper/http_request"
 	"confluence_cli/log"
 	"confluence_cli/model/req"
@@ -29,10 +30,11 @@ func CreatePageAction(c *cli.Context) error {
 		return fmt.Errorf("please provide --title xxxx")
 	}
 
-	bodyFromValueFile := c.String("body-from-value-file")
-	if bodyFromValueFile == "" {
-		log.Error("Please provide --body-from-value-file xxxx")
-		return fmt.Errorf("please provide --body-from-value-file xxxx")
+	bodyValueFromFile := c.String("body-value-from-file")
+	bodyValue := c.String("body-value")
+	if bodyValueFromFile == "" && bodyValue == "" {
+		log.Error("Please provide --body-value xxxx")
+		return fmt.Errorf("please provide --body-value xxxx")
 	}
 
 	var nextParentID string
@@ -76,9 +78,16 @@ func CreatePageAction(c *cli.Context) error {
 			return err
 		}
 		nextParentID = createdResultPage.ID
+	} else {
+		log.Info(resp.Status())
 	}
 
-	_, err = http_request.CreateConfluencePage(spaceId, nextParentID, fmt.Sprintf("[%s] %s", formattedDateTime, title), bodyFromValueFile)
+	blockCode, err := helper.FormatForConfluenceCodeMacro(bodyValueFromFile)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	_, err = http_request.CreateConfluencePage(spaceId, nextParentID, fmt.Sprintf("[%s] %s", formattedDateTime, title), blockCode)
 	if err != nil {
 		log.Error("Error when Create Page via Confluence API: ", err)
 		return err

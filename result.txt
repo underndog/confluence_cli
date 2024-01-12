@@ -1,0 +1,76 @@
+--------------------------------------------------------------------------------------------------------------
+INTEGRATION TESTING RESULT 2024-01-11 04:06:51
+--------------------------------------------------------------------------------------------------------------
+00_avscan_regular                                            01 PASS
+01_avscan_infected                                           01 PASS
+02_avscan_encryptedfile_nopassword                           01 PASS
+03_avscan_encryptedfile_wrongpassword                        01 PASS
+04_avscan_encryptedfile_rightpassword                        01 PASS
+05_avscan_encryptedarchivefile_nopassword                    01 PASS
+06_avscan_encryptedarchivefile_wrongpassword                 01 PASS
+07_avscan_encryptedarchivefile_rightpassword                 01 PASS PASS
+08_cdravscan_cdronly                                         01 PASS
+09_cdravscan_regularfile                                     01 PASS
+10_cdravscan_archivefile                                     01 PASS
+11_cdravscan_unsupported_filetype                            01 PASS
+12_cdravscan_infected                                        02 ____ ____
+13_cdravscan_encryptedfile_nopassword                        01 PASS
+14_cdravscan_encryptedfile_rightpassword                     01 PASS
+15_cdravscan_encryptedfile_wrongpassword                     01 PASS
+16_cdravscan_regularfile_skipcdroption                       01 PASS
+17_cdravscan_normalfile_righttypeto                          01 PASS
+18_cdravscan_normalfile_wrongtypeto                          01 PASS
+19_cdravscan_normalfile_nontypeto                            02 PASS
+20_cdravscan_cdronly_rescansanitizedfile                     01 PASS
+21_cdravscan_unsupported_filetype_rescansanitizedfile        01 PASS
+22_cdravscan_regularfile_rescansanitizedfile                 02 PASS ____
+23_cdravscan_invalid_structure                               01 PASS
+24_archiveavscan_archivefile                                 01 PASS PASS
+25_archiveavscan_archivefile_maxfileoption                   01 PASS
+26_archiveavscan_archivefile_maxsizeoption                   01 PASS
+27_archiveavscan_encryptedarchivefile_nopassword             01 PASS
+28_archiveavscan_encryptedarchivefile_rightpassword          01 PASS PASS
+29_archiveavscan_encrypteddocumentfile_nopassword            01 PASS
+30_archiveavscan_encrypteddocumentfile_rightpassword         01 PASS
+31_archiveavscan_unsupported_filetype                        01 PASS
+32_archiveavscan_failed_ftresutls                            01 PASS PASS
+33_archiveavscan_success_ftresutls                           01 PASS PASS
+34_cdrarchivescan_doublelevel_archivefile                    01 PASS PASS PASS
+35_cdrarchivescan_unsupportcdrfile                           01 PASS PASS
+36_cdrarchivescan_archiveblockfile                           01 PASS PASS
+37_cdrarchivescan_unsupportcdrfile_include_unsupported_file  01 PASS PASS
+38_cdrarchivescan_archiveblockfile_include_blocked_sanitizat 02 PASS ____ PASS
+39_cdrarchivescan_unsupport_block                            02 PASS PASS ____ PASS
+40_cdrarchivescan_archivefie                                 01 PASS PASS
+41_cdrarchivescan_archivefie_convertto_success               01 PASS PASS
+42_cdrarchivescan_archivefie_wrongtypeto                     01 PASS PASS
+43_cdrarchivescan_archivefie_rescansanitizedfile             02 PASS ____ PASS
+44_cdrarchivescan_encrypted_archivefile_nopassword           01 PASS PASS
+45_multifile_avscan                                          01 PASS PASS
+46_multifile_cdravscan                                       02 PASS PASS ____
+47_multifile_archiveavscan                                   01 PASS PASS PASS PASS
+48_multifile_cdrarchivescan                                  01 PASS PASS PASS PASS PASS
+49_scan_filescanio_av                                        01 PASS
+50_scan_filescanio_av_cdr                                    02 ____
+51_scan_filescanio_av_archive_1_level                        01 PASS PASS
+52_scan_filescanio_av_cdr_archive_1_level                    01 PASS PASS
+53_scan_filescanio_av_archive                                01 PASS PASS PASS
+54_scan_filescanio_av_cdr_archive                            01 PASS PASS PASS
+55_scan_dlp_av                                               01 PASS
+56_scan_dlp_av_failed                                        01 PASS
+57_scan_dlp_certainty_low_av                                 01 PASS
+58_scan_dlp_certainty_high_av                                02 ____
+59_scan_timeout_av                                           01 PASS
+60_scan_timeout_allav                                        02 ____
+61_scan_timeout_cdr                                          01 PASS
+62_scan_timeout_archive                                      02 ____
+63_scan_timeout_dlp                                          02 ____
+64_scan_timeout_filescanio                                   02 ____
+65_invalidation/wrong_url                                    01 PASS
+66_invalidation/wrong_md5                                    01 PASS
+67_invalidation/wrong_sha1                                   01 PASS
+68_invalidation/wrong_sha256                                 01 PASS
+69_cdr-only/is_enable_unarchive                              01 PASS
+70_cdr-only/compress_unsupported                             01 PASS
+71_cdr-only/disable_unarchive                                01 PASS
+--------------------------------------------------------------------------------------------------------------
