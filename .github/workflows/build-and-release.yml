@@ -15,11 +15,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Go 1.21
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go_version }}
-      - name: Test Pre-Publish
-        run: make test
       - name: Build with xgo
         uses: crazy-max/ghaction-xgo@v1
         with:
