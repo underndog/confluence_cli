@@ -29,6 +29,10 @@ jobs:
           v: true
           x: false
           ldflags: -s -w
+      - uses: actions/upload-artifact@v4
+        with:
+          name: confluence_cli
+          path: build/
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
