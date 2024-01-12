@@ -44,7 +44,7 @@ jobs:
         run: go mod tidy
       - name: Build binary for Linux
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o confluence_cli
+          GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o confluence_cli
       - name: Display structure
         run: ls -la
       - name: Upload artifact Linux
