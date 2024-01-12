@@ -80,6 +80,7 @@ func CreatePageAction(c *cli.Context) error {
 		nextParentID = createdResultPage.ID
 	} else {
 		log.Info(resp.Status())
+		return fmt.Errorf("status Response from Confluence: %s", resp.Status())
 	}
 
 	blockCode, err := helper.FormatForConfluenceCodeMacro(bodyValueFromFile)

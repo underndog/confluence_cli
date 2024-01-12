@@ -5,6 +5,10 @@ import (
 	"os"
 )
 
+/***
+Refer to links: https://community.atlassian.com/t5/Confluence-questions/Code-Macro-via-Confluence-REST-API/qaq-p/2097123
+*/
+
 // function to format content for Confluence code macro
 func FormatForConfluenceCodeMacro(filePath string) (string, error) {
 	// Read the file
