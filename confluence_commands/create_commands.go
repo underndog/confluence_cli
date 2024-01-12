@@ -28,8 +28,12 @@ func CreatePageCommand() *cli.Command {
 						Usage: "Sets the title for the new Confluence page",
 					},
 					&cli.StringFlag{
-						Name:  "body-from-value-file",
+						Name:  "body-value-from-file",
 						Usage: "Specifies the file path that contains the content for the page body",
+					},
+					&cli.StringFlag{
+						Name:  "body-value",
+						Usage: "The content for the page body",
 					},
 				},
 			},
