@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Go 1.21
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go_version }}
       - name: Build with xgo
@@ -39,6 +39,6 @@ jobs:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
-          artifacts: "*"
+          artifacts: "build/*"
           draft: false
           prerelease: false
