@@ -39,6 +39,6 @@ jobs:
           token: ${{ secrets.MY_GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: "Release ${{ github.ref_name }}"
-          artifacts: "confluence_cli*"
+          artifacts: "*"
           draft: false
           prerelease: false
