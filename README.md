@@ -30,6 +30,10 @@ confluence_cli create page \
 - **Description:** Sets the title for the new Confluence page.
 - **Usage:** Replace `{title of page}` with the desired page title.
 
+### `--body-value {value path to page}`:
+- **Description:** Sets the content for the new Confluence page.
+- **Usage:** Replace `{file path to file}` with the desired page content.
+
 ### `--body-from-value-file {file path to file}`:
 - **Description:** Specifies the file path that contains the content for the page body.
 - **Usage:** Replace `{file path to file}` with the actual path to the content file.
@@ -40,6 +44,13 @@ In order to connect Your Confluence. You must configure the environments such as
 
 `CONFLUENCE_URL`:   
 - **Description:** your confluence link such as: `https://nimtechnology.atlassian.net`
+
+`EMAIL`:
+- **Description:** your email to access Confluence API such as: `mr.nim@nimtechnology.com`
+
+`API_TOKEN`:
+- **Description:** The Token is used to access Confluence API such as: `XXXXXXXXXXXXXX`
+- **Refer to:** https://nimtechnology.com/2024/01/05/confluence-integrate-with-confluence-by-api/
 
 # How build Binary file.
 
