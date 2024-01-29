@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/urfave/cli/v2"
+	"os"
 	"time"
 )
 
@@ -34,7 +35,12 @@ func CreatePageAction(c *cli.Context) error {
 	var contentPage string
 
 	if bodyValueFromFile != "" {
-		contentPage = bodyValueFromFile
+		data, err := os.ReadFile(bodyValueFromFile)
+		if err != nil {
+			log.Error("Error when Create Page via Confluence API: ", err)
+			return err
+		}
+		contentPage = string(data)
 	} else if bodyValue != "" {
 		contentPage = bodyValue
 	} else {
