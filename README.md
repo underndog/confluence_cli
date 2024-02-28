@@ -7,7 +7,7 @@ confluence_cli create page \
 --space-id {space id} \
 --parent-page-id {parent page id} \
 --title {tile of page} \
---body-from-value-file {file path to file}
+--body-value-from-file {file path to file}
 ```
 
 # Command Components
@@ -34,7 +34,7 @@ confluence_cli create page \
 - **Description:** Sets the content for the new Confluence page.
 - **Usage:** Replace `{file path to file}` with the desired page content.
 
-### `--body-from-value-file {file path to file}`:
+### `--body-value-from-file {file path to file}`:
 - **Description:** Specifies the file path that contains the content for the page body.
 - **Usage:** Replace `{file path to file}` with the actual path to the content file.
 
@@ -58,7 +58,7 @@ On windows
 ```shell
 go build -o confluence_cli.exe
 
-.\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-value-from-file hihi1
+.\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-value-from-file result.txt
 ```
 
 

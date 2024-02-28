@@ -28,7 +28,7 @@ func CreateConfluencePage(spaceID, parentId, title, bodyValue string) (*resty.Re
 		},
 	}
 	email := helper.GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
-	apiToken := helper.GetEnvOrDefault("API_TOKEN", "nimtechnology")
+	apiToken := helper.GetEnvOrDefault("API_TOKEN", "ATATT3xFfGF0HhLy35h_ScihWNjoT8cABSw2f-GdCapur0eUVD1T54Ll1F4gLQhcAmpudC54lCBpDrvku68RTxor_4idlGEADw2TAzZqwYjs8a9iI2OhobhTILl5G7KX0lsEcbNXUj4Rq8EtYtZqBLIzH6WAhc10jn6jmx2TEFKVcc1a2g2GbiA=0A85027B")
 
 	// POST JSON string
 	// No need to set content type, if you have client level setting
@@ -50,7 +50,7 @@ func GetConfluencePagesByTitle(title string) (*resty.Response, error) {
 	client := resty.New()
 
 	email := helper.GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
-	apiToken := helper.GetEnvOrDefault("API_TOKEN", "nimtechnology")
+	apiToken := helper.GetEnvOrDefault("API_TOKEN", "ATATT3xFfGF0HhLy35h_ScihWNjoT8cABSw2f-GdCapur0eUVD1T54Ll1F4gLQhcAmpudC54lCBpDrvku68RTxor_4idlGEADw2TAzZqwYjs8a9iI2OhobhTILl5G7KX0lsEcbNXUj4Rq8EtYtZqBLIzH6WAhc10jn6jmx2TEFKVcc1a2g2GbiA=0A85027B")
 
 	resp, err := client.R().
 		SetBasicAuth(email, apiToken).
