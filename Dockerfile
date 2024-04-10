@@ -1,4 +1,4 @@
-FROM golang:1.22.1-bullseye
+FROM golang:1.22.2-bullseye
 
 RUN apt-get update -y && apt install git inotify-tools -y
 
