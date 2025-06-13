@@ -1,6 +1,8 @@
 module confluence_cli
 
-go 1.21
+go 1.22
+
+toolchain go1.24.4
 
 require (
 	github.com/go-resty/resty/v2 v2.16.2
@@ -9,7 +11,8 @@ require (
 	github.com/mrnim94/file-rotatelogs v2.4.0+incompatible
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v2 v2.27.5
+	github.com/urfave/cli/v2 v2.27.6
+	github.com/urfave/cli/v3 v3.3.8
 )
 
 require (
