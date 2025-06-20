@@ -83,7 +83,7 @@ In order to connect Your Confluence. You must configure the environments such as
 
 ## How build Binary file.
 
-### On windows
+### On Windows
 ```shell
 go build -o confluence_cli.exe
 ```
@@ -97,16 +97,21 @@ go build -o confluence_cli
 
 ### Create a Page:
 ```shell
+### On Windows
 .\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-value-from-file result.txt
-./confluence_cli create page --space-id 98432 --parent-page-id 589825 --title "Test Page" --body-value "This is the page content"
+### On Linux/Mac
+./confluence_cli create page --space-id 98432 --parent-page-id 589825 --title "Test Page" --body-value-from-file result.txt
 ```
 
 ### Upload Attachment:
 ```shell
+### On Windows
+.\confluence_cli.exe create attachment --page-id 589825 --file /path/to/file
+### On Linux/Mac
 ./confluence_cli create attachment --page-id 589825 --file /path/to/file
 ```
 
-## API Reference
+## API Referenc
 
 This tool uses the following Confluence REST APIs:
 - **Create Page:** `POST /wiki/api/v2/pages`
