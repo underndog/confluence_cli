@@ -4,6 +4,9 @@ import (
 	"confluence_cli/helper"
 	"confluence_cli/log"
 	"confluence_cli/model/req"
+	"os"
+	"path/filepath"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -63,4 +66,36 @@ func GetConfluencePagesByTitle(title string) (*resty.Response, error) {
 		log.Error(err)
 	}
 	return resp, err
+}
+
+func UploadConfluenceAttachment(pageId, filePath string) (*resty.Response, error) {
+	// Create a Resty Client
+	client := resty.New()
+
+	email := helper.GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
+	apiToken := helper.GetEnvOrDefault("API_TOKEN", "nimtechnology")
+
+	// Open the file
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Error("Error opening file:", err)
+		return nil, err
+	}
+	defer file.Close()
+
+	// Get file name from path
+	fileName := filepath.Base(filePath)
+
+	resp, err := client.R().
+		SetBasicAuth(email, apiToken).
+		SetHeader("X-Atlassian-Token", "no-check").
+		SetFileReader("file", fileName, file).
+		Post(helper.GetEnvOrDefault("CONFLUENCE_URL", "https://nimtechnology.atlassian.net") + "/wiki/rest/api/content/" + pageId + "/child/attachment")
+
+	if err != nil {
+		log.Error("Error uploading file:", err)
+		return nil, err
+	}
+
+	return resp, nil
 }
