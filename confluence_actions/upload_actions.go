@@ -54,7 +54,7 @@ func UploadAttachmentAction(c *cli.Context) error {
 	log.Info("Response status:", resp.Status())
 	log.Info("Response code:", resp.StatusCode())
 
-	if resp.StatusCode() == 200 {
+	if resp.StatusCode() == 200 && resp.StatusCode() < 300 {
 		log.Info("File uploaded successfully!")
 	} else {
 		log.Error("Upload failed with status:", resp.Status())
