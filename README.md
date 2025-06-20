@@ -58,8 +58,8 @@ confluence_cli create attachment \
 - **Description:** The Content ID (Page ID) of the Confluence page where the file will be uploaded as attachment.
 - **Usage:** Replace `{page id}` with the actual page ID.
 - **How to find Page ID:**
-  - From URL: `https://opswat.atlassian.net/wiki/spaces/SPACE/pages/4114580782/Page+Title`
-  - Page ID is: `4114580782`
+  - From URL: `https://<CONFLUENCE_URL>/wiki/spaces/SPACE/pages/123/Page+Title`
+  - Page ID is: `123`
   - Or use Confluence UI: Page → "..." → "Page Information" → Copy "Page ID"
 
 #### `--file {file path}`:
