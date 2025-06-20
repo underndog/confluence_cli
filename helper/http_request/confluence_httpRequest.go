@@ -4,6 +4,7 @@ import (
 	"confluence_cli/helper"
 	"confluence_cli/log"
 	"confluence_cli/model/req"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -95,6 +96,11 @@ func UploadConfluenceAttachment(pageId, filePath string) (*resty.Response, error
 	if err != nil {
 		log.Error("Error uploading file:", err)
 		return nil, err
+	}
+	// Validate HTTP response status
+	if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+		log.Error("HTTP error:", resp.Status(), "Body:", string(resp.Body()))
+		return resp, fmt.Errorf("HTTP error: %s", resp.Status())
 	}
 
 	return resp, nil
