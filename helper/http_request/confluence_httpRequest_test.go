@@ -7,6 +7,9 @@ import (
 )
 
 func TestCreateConfluencePage(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping integration test in CI environment")
+	}
 	log.InitLogger(true)
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
@@ -25,6 +28,9 @@ func TestCreateConfluencePage(t *testing.T) {
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping integration test in CI environment")
+	}
 	log.InitLogger(true)
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
