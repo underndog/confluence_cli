@@ -1,8 +1,8 @@
 package confluence_actions
 
 import (
-	"errors"
 	"testing"
+	"flag"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
 )
@@ -18,8 +18,8 @@ func TestCreatePageAction_MissingFlags(t *testing.T) {
 }
 
 // Helper to create a flag set
-func flagSet(args []string) *cli.FlagSet {
-	set := cli.NewFlagSet("test", 0)
+func flagSet(args []string) *flag.FlagSet {
+	set := flag.NewFlagSet("test", 0)
 	set.String("space-id", "", "")
 	set.String("parent-page-id", "", "")
 	set.String("title", "", "")
