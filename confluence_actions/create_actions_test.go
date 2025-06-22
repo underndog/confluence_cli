@@ -5,10 +5,12 @@ import (
 	"flag"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
+	"confluence_cli/log"
 )
 
 // Mock context for minimal flag testing
 func TestCreatePageAction_MissingFlags(t *testing.T) {
+	log.InitLogger(true)
 	app := cli.NewApp()
 	set := flagSet([]string{})
 	c := cli.NewContext(app, set, nil)
