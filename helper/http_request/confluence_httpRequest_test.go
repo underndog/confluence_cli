@@ -3,9 +3,11 @@ package http_request
 import (
 	"os"
 	"testing"
+	"confluence_cli/log"
 )
 
 func TestCreateConfluencePage(t *testing.T) {
+	log.InitLogger(true)
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
 	os.Setenv("CONFLUENCE_URL", "http://localhost")
@@ -23,6 +25,7 @@ func TestCreateConfluencePage(t *testing.T) {
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
+	log.InitLogger(true)
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
 	os.Setenv("CONFLUENCE_URL", "http://localhost")
