@@ -21,6 +21,9 @@ func TestCreatePageAction_MissingFlags(t *testing.T) {
 
 // Helper to create a flag set
 func flagSet(args []string) *flag.FlagSet {
+	if len(args)%2 != 0 {
+		panic("args must contain an even number of elements (key-value pairs)")
+	}
 	set := flag.NewFlagSet("test", 0)
 	set.String("space-id", "", "")
 	set.String("parent-page-id", "", "")
@@ -28,6 +31,9 @@ func flagSet(args []string) *flag.FlagSet {
 	set.String("body-value-from-file", "", "")
 	set.String("body-value", "", "")
 	for i := 0; i < len(args); i += 2 {
+		if i+1 >= len(args) {
+			break // or handle the error appropriately
+		}
 		set.Set(args[i], args[i+1])
 	}
 	return set
