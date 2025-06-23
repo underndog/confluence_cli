@@ -6,7 +6,7 @@ import (
 	"confluence_cli/log"
 )
 
-func TestCreateConfluencePage(t *testing.T) {
+func setupTestEnvironment(t *testing.T) func() {
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping integration test in CI environment")
 	}
@@ -14,7 +14,25 @@ func TestCreateConfluencePage(t *testing.T) {
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
 	os.Setenv("CONFLUENCE_URL", "http://localhost")
-	defer os.Unsetenv("EMAIL")
+	
+	return func() {
+		os.Unsetenv("EMAIL")
+		os.Unsetenv("API_TOKEN")
+		os.Unsetenv("CONFLUENCE_URL")
+	}
+}
+
+func TestCreateConfluencePage(t *testing.T) {
+	cleanup := setupTestEnvironment(t)
+	defer cleanup()
+
+	resp, err := CreateConfluencePage("SPACE", "PARENT", "TestTitle", "TestBody")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Error("expected response, got nil")
+	}
 	defer os.Unsetenv("API_TOKEN")
 	defer os.Unsetenv("CONFLUENCE_URL")
 
@@ -28,16 +46,8 @@ func TestCreateConfluencePage(t *testing.T) {
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping integration test in CI environment")
-	}
-	log.InitLogger(true)
-	os.Setenv("EMAIL", "test@example.com")
-	os.Setenv("API_TOKEN", "testtoken")
-	os.Setenv("CONFLUENCE_URL", "http://localhost")
-	defer os.Unsetenv("EMAIL")
-	defer os.Unsetenv("API_TOKEN")
-	defer os.Unsetenv("CONFLUENCE_URL")
+	cleanup := setupTestEnvironment(t)
+	defer cleanup()
 
 	resp, err := GetConfluencePagesByTitle("TestTitle")
 	if err != nil {
