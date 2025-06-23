@@ -33,14 +33,6 @@ func TestCreateConfluencePage(t *testing.T) {
 	if resp == nil {
 		t.Error("expected response, got nil")
 	}
-
-	resp, err = CreateConfluencePage("SPACE", "PARENT", "TestTitle", "TestBody")
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
-	if resp == nil {
-		t.Error("expected response, got nil")
-	}
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
