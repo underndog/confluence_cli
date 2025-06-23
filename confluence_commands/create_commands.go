@@ -2,6 +2,7 @@ package confluence_commands
 
 import (
 	"confluence_cli/confluence_actions"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -34,6 +35,21 @@ func CreatePageCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "body-value",
 						Usage: "The content for the page body",
+					},
+				},
+			},
+			{
+				Name:   "attachment",
+				Usage:  "Upload a file as attachment to a Confluence page",
+				Action: confluence_actions.UploadAttachmentAction,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "page-id",
+						Usage: "The ID of the page where the file will be uploaded as attachment",
+					},
+					&cli.StringFlag{
+						Name:  "file",
+						Usage: "Path to the file to upload",
 					},
 				},
 			},
