@@ -36,6 +36,10 @@ func CreatePageCommand() *cli.Command {
 						Name:  "body-value",
 						Usage: "The content for the page body",
 					},
+					&cli.StringFlag{
+						Name:  "file",
+						Usage: "Path to the file to upload as attachment after creating the page",
+					},
 				},
 			},
 			{
