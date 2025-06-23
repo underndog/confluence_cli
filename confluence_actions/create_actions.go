@@ -114,8 +114,10 @@ func CreatePageAction(c *cli.Context) error {
 			return fmt.Errorf("file does not exist: %s", filePath)
 		}
 
-		// Get the created page ID for attachment
-		respPages, err := http_request.GetConfluencePagesByTitle(fmt.Sprintf("[%s] %s", formattedDateTime, title))
+		// Get the created child page ID for attachment
+		// Use a more specific search to avoid race conditions
+		childPageTitle := fmt.Sprintf("[%s] %s", formattedDateTime, title)
+		respPages, err := http_request.GetConfluencePagesByTitle(childPageTitle)
 		if err != nil {
 			log.Error("Error when Get Page via Confluence API: ", err)
 			return err
@@ -128,28 +130,37 @@ func CreatePageAction(c *cli.Context) error {
 			return err
 		}
 
-		if len(pagesInfo.Results) > 0 {
-			createdPageId := pagesInfo.Results[0].ID
-
-			// Upload attachment to the created child page
-			log.Info("Uploading attachment to created page:", createdPageId)
-			log.Info("Uploading attachment:", filePath)
-			uploadResp, err := http_request.UploadConfluenceAttachment(createdPageId, filePath)
-			if err != nil {
-				log.Error("Error when uploading file via Confluence API:", err)
-				return err
+		// Find the most recently created page with the exact title
+		var createdPageId string
+		found := false
+		for _, page := range pagesInfo.Results {
+			if page.Title == childPageTitle {
+				createdPageId = page.ID
+				found = true
+				break
 			}
+		}
 
-			if uploadResp.StatusCode() >= 200 && uploadResp.StatusCode() < 300 {
-				log.Info("File uploaded successfully as attachment!")
-			} else {
-				log.Error("Upload failed with status:", uploadResp.Status())
-				log.Error("Response body:", string(uploadResp.Body()))
-				return fmt.Errorf("upload failed with status: %s", uploadResp.Status())
-			}
-		} else {
+		if !found {
 			log.Error("Could not find created page for attachment")
 			return fmt.Errorf("could not find created page for attachment")
+		}
+
+		// Upload attachment to the created child page
+		log.Info("Uploading attachment to created page:", createdPageId)
+		log.Info("Uploading attachment:", filePath)
+		uploadResp, err := http_request.UploadConfluenceAttachment(createdPageId, filePath)
+		if err != nil {
+			log.Error("Error when uploading file via Confluence API:", err)
+			return err
+		}
+
+		if uploadResp.StatusCode() >= 200 && uploadResp.StatusCode() < 300 {
+			log.Info("File uploaded successfully as attachment!")
+		} else {
+			log.Error("Upload failed with status:", uploadResp.Status())
+			log.Error("Response body:", string(uploadResp.Body()))
+			return fmt.Errorf("upload failed with status: %s", uploadResp.Status())
 		}
 	}
 
