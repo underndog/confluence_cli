@@ -33,10 +33,8 @@ func TestCreateConfluencePage(t *testing.T) {
 	if resp == nil {
 		t.Error("expected response, got nil")
 	}
-	defer os.Unsetenv("API_TOKEN")
-	defer os.Unsetenv("CONFLUENCE_URL")
 
-	resp, err := CreateConfluencePage("SPACE", "PARENT", "TestTitle", "TestBody")
+	resp, err = CreateConfluencePage("SPACE", "PARENT", "TestTitle", "TestBody")
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
