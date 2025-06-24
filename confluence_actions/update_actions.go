@@ -33,6 +33,9 @@ func UpdatePageAction(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if resp.StatusCode() < 200 || resp.StatusCode() >= 300 {
+			return fmt.Errorf("failed to get page: %s", resp.Status())
+		}
 		var currentPage req.CreatePageResult
 		if err := json.Unmarshal(resp.Body(), &currentPage); err != nil {
 			return err
@@ -75,6 +78,10 @@ func UpdatePageAction(c *cli.Context) error {
 		updateResp, err := http_request.UpdateConfluencePage(pageId, payload)
 		if err != nil {
 			log.Error("Failed to update page:", err)
+			return fmt.Errorf("failed to update page: %w", err)
+		}
+		if updateResp.StatusCode() < 200 || updateResp.StatusCode() >= 300 {
+			log.Error("Update failed with status:", updateResp.Status())
 			return fmt.Errorf("failed to update page with status: %s", updateResp.Status())
 		}
 		log.Info("Page content updated successfully!")

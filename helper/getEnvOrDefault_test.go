@@ -77,9 +77,9 @@ func TestGetEnvOrDefault_ConfluenceURL(t *testing.T) {
 			envURL:        "",
 			envEmail:      "",
 			envToken:      "",
-			expectedURL:   "https://nimtechnology.atlassian.net",
-			expectedEmail: "dc.nim94@gmail.com",
-			expectedToken: "nimtechnology",
+			expectedURL:   "https://example.atlassian.net",
+			expectedEmail: "test@example.com",
+			expectedToken: "test-token",
 		},
 	}
 
@@ -99,9 +99,9 @@ func TestGetEnvOrDefault_ConfluenceURL(t *testing.T) {
 				defer os.Unsetenv("API_TOKEN")
 			}
 
-			url := GetEnvOrDefault("CONFLUENCE_URL", "https://nimtechnology.atlassian.net")
-			email := GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
-			token := GetEnvOrDefault("API_TOKEN", "nimtechnology")
+			url := GetEnvOrDefault("CONFLUENCE_URL", "https://example.atlassian.net")
+			email := GetEnvOrDefault("EMAIL", "test@example.com")
+			token := GetEnvOrDefault("API_TOKEN", "test-token")
 
 			assert.Equal(t, tt.expectedURL, url)
 			assert.Equal(t, tt.expectedEmail, email)
