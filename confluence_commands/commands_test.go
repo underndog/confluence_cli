@@ -7,6 +7,19 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func checkFlags(t *testing.T, flags []cli.Flag, required []string) {
+	for _, flagName := range required {
+		found := false
+		for _, flag := range flags {
+			if flag.Names()[0] == flagName {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "Required flag %s not found", flagName)
+	}
+}
+
 func TestCreatePageCommand_Structure(t *testing.T) {
 	command := CreatePageCommand()
 
@@ -19,31 +32,8 @@ func TestCreatePageCommand_Structure(t *testing.T) {
 	assert.Equal(t, "Create a page with title and content", subcommand.Usage)
 	assert.NotNil(t, subcommand.Action)
 
-	// Check required flags
-	requiredFlags := []string{"space-id", "parent-page-id", "title"}
-	for _, flagName := range requiredFlags {
-		found := false
-		for _, flag := range subcommand.Flags {
-			if flag.Names()[0] == flagName {
-				found = true
-				break
-			}
-		}
-		assert.True(t, found, "Required flag %s not found", flagName)
-	}
-
-	// Check optional flags
-	optionalFlags := []string{"body-value", "body-value-from-file", "file"}
-	for _, flagName := range optionalFlags {
-		found := false
-		for _, flag := range subcommand.Flags {
-			if flag.Names()[0] == flagName {
-				found = true
-				break
-			}
-		}
-		assert.True(t, found, "Optional flag %s not found", flagName)
-	}
+	checkFlags(t, subcommand.Flags, []string{"space-id", "parent-page-id", "title"})
+	checkFlags(t, subcommand.Flags, []string{"body-value", "body-value-from-file", "file"})
 }
 
 func TestUpdatePageCommand_Structure(t *testing.T) {
@@ -58,31 +48,8 @@ func TestUpdatePageCommand_Structure(t *testing.T) {
 	assert.Equal(t, "Update a page's body content", subcommand.Usage)
 	assert.NotNil(t, subcommand.Action)
 
-	// Check required flags
-	requiredFlags := []string{"page-id"}
-	for _, flagName := range requiredFlags {
-		found := false
-		for _, flag := range subcommand.Flags {
-			if flag.Names()[0] == flagName {
-				found = true
-				break
-			}
-		}
-		assert.True(t, found, "Required flag %s not found", flagName)
-	}
-
-	// Check optional flags
-	optionalFlags := []string{"body-value", "body-value-from-file", "file"}
-	for _, flagName := range optionalFlags {
-		found := false
-		for _, flag := range subcommand.Flags {
-			if flag.Names()[0] == flagName {
-				found = true
-				break
-			}
-		}
-		assert.True(t, found, "Optional flag %s not found", flagName)
-	}
+	checkFlags(t, subcommand.Flags, []string{"page-id"})
+	checkFlags(t, subcommand.Flags, []string{"body-value", "body-value-from-file", "file"})
 }
 
 func TestUploadCommand_Structure(t *testing.T) {
@@ -97,22 +64,10 @@ func TestUploadCommand_Structure(t *testing.T) {
 	assert.Equal(t, "Upload an attachment to an existing page without changing the page content", subcommand.Usage)
 	assert.NotNil(t, subcommand.Action)
 
-	// Check required flags
-	requiredFlags := []string{"page-id", "file"}
-	for _, flagName := range requiredFlags {
-		found := false
-		for _, flag := range subcommand.Flags {
-			if flag.Names()[0] == flagName {
-				found = true
-				break
-			}
-		}
-		assert.True(t, found, "Required flag %s not found", flagName)
-	}
+	checkFlags(t, subcommand.Flags, []string{"page-id", "file"})
 }
 
 func TestCommands_Integration(t *testing.T) {
-	// Test that all commands can be added to an app without errors
 	app := &cli.App{
 		Commands: []*cli.Command{
 			CreatePageCommand(),

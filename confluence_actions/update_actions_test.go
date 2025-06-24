@@ -7,46 +7,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test validation logic with mock validation function
+func validateUpdatePage(pageId string) error {
+	if pageId == "" {
+		return fmt.Errorf("please provide --page-id")
+	}
+	return nil
+}
+
 func TestUpdatePageValidationLogic(t *testing.T) {
-	// Mock validation function that mimics the logic in UpdatePageAction
-	validateRequiredFields := func(pageId string) error {
-		if pageId == "" {
-			return fmt.Errorf("please provide --page-id")
-		}
-		return nil
-	}
-
-	tests := []struct {
-		name        string
-		pageId      string
-		expectError bool
-		errorMsg    string
-	}{
+	cases := []ValidationTestCase{
 		{
-			name:        "Missing page-id",
-			pageId:      "",
-			expectError: true,
-			errorMsg:    "please provide --page-id",
+			Name:        "Missing page-id",
+			Args:        []string{""},
+			ExpectError: true,
+			ErrorMsg:    "please provide --page-id",
 		},
 		{
-			name:        "Valid page-id",
-			pageId:      "123",
-			expectError: false,
+			Name:        "Valid page-id",
+			Args:        []string{"123"},
+			ExpectError: false,
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateRequiredFields(tt.pageId)
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorMsg)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
+	RunValidationTable(t, func(args ...string) error {
+		return validateUpdatePage(args[0])
+	}, cases)
 }
 
 // Test file validation logic

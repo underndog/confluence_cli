@@ -183,3 +183,47 @@ func TestFileValidationLogic(t *testing.T) {
 		})
 	}
 }
+
+func validateCreatePage(spaceId, parentId, title string) error {
+	if spaceId == "" {
+		return fmt.Errorf("--space-id is required")
+	}
+	if parentId == "" {
+		return fmt.Errorf("--parent-page-id is required")
+	}
+	if title == "" {
+		return fmt.Errorf("--title is required")
+	}
+	return nil
+}
+
+func TestCreatePageValidationLogic(t *testing.T) {
+	cases := []ValidationTestCase{
+		{
+			Name:        "Missing space-id",
+			Args:        []string{"", "123", "Test"},
+			ExpectError: true,
+			ErrorMsg:    "--space-id is required",
+		},
+		{
+			Name:        "Missing parent-page-id",
+			Args:        []string{"SPACE", "", "Test"},
+			ExpectError: true,
+			ErrorMsg:    "--parent-page-id is required",
+		},
+		{
+			Name:        "Missing title",
+			Args:        []string{"SPACE", "123", ""},
+			ExpectError: true,
+			ErrorMsg:    "--title is required",
+		},
+		{
+			Name:        "Valid required parameters",
+			Args:        []string{"SPACE", "123", "Test"},
+			ExpectError: false,
+		},
+	}
+	RunValidationTable(t, func(args ...string) error {
+		return validateCreatePage(args[0], args[1], args[2])
+	}, cases)
+}

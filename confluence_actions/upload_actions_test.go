@@ -7,59 +7,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test validation logic with mock validation function
+func validateUploadAttachment(pageId, filePath string) error {
+	if pageId == "" {
+		return fmt.Errorf("please provide --page-id")
+	}
+	if filePath == "" {
+		return fmt.Errorf("please provide --file")
+	}
+	return nil
+}
+
 func TestUploadAttachmentValidationLogic(t *testing.T) {
-	// Mock validation function that mimics the logic in UploadAttachmentAction
-	validateRequiredFields := func(pageId, filePath string) error {
-		if pageId == "" {
-			return fmt.Errorf("please provide --page-id")
-		}
-		if filePath == "" {
-			return fmt.Errorf("please provide --file")
-		}
-		return nil
-	}
-
-	tests := []struct {
-		name        string
-		pageId      string
-		filePath    string
-		expectError bool
-		errorMsg    string
-	}{
+	cases := []ValidationTestCase{
 		{
-			name:        "Missing page-id",
-			pageId:      "",
-			filePath:    "/tmp/test.txt",
-			expectError: true,
-			errorMsg:    "please provide --page-id",
+			Name:        "Missing page-id",
+			Args:        []string{"", "/tmp/test.txt"},
+			ExpectError: true,
+			ErrorMsg:    "please provide --page-id",
 		},
 		{
-			name:        "Missing file",
-			pageId:      "123",
-			filePath:    "",
-			expectError: true,
-			errorMsg:    "please provide --file",
+			Name:        "Missing file",
+			Args:        []string{"123", ""},
+			ExpectError: true,
+			ErrorMsg:    "please provide --file",
 		},
 		{
-			name:        "Valid parameters",
-			pageId:      "123",
-			filePath:    "/tmp/test.txt",
-			expectError: false,
+			Name:        "Valid parameters",
+			Args:        []string{"123", "/tmp/test.txt"},
+			ExpectError: false,
 		},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateRequiredFields(tt.pageId, tt.filePath)
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorMsg)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
+	RunValidationTable(t, func(args ...string) error {
+		return validateUploadAttachment(args[0], args[1])
+	}, cases)
 }
 
 // Test file validation logic
