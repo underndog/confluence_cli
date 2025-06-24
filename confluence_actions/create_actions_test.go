@@ -7,68 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test validation logic directly without CLI context
-func TestValidationLogic(t *testing.T) {
-	tests := []struct {
-		name        string
-		spaceId     string
-		parentId    string
-		title       string
-		expectError bool
-		errorMsg    string
-	}{
-		{
-			name:        "Missing space-id",
-			spaceId:     "",
-			parentId:    "123",
-			title:       "Test",
-			expectError: true,
-			errorMsg:    "--space-id is required",
-		},
-		{
-			name:        "Missing parent-page-id",
-			spaceId:     "SPACE",
-			parentId:    "",
-			title:       "Test",
-			expectError: true,
-			errorMsg:    "--parent-page-id is required",
-		},
-		{
-			name:        "Missing title",
-			spaceId:     "SPACE",
-			parentId:    "123",
-			title:       "",
-			expectError: true,
-			errorMsg:    "--title is required",
-		},
-		{
-			name:        "Valid required parameters",
-			spaceId:     "SPACE",
-			parentId:    "123",
-			title:       "Test",
-			expectError: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Test validation logic directly
-			if tt.spaceId == "" {
-				assert.True(t, tt.expectError)
-				assert.Contains(t, tt.errorMsg, "--space-id is required")
-			} else if tt.parentId == "" {
-				assert.True(t, tt.expectError)
-				assert.Contains(t, tt.errorMsg, "--parent-page-id is required")
-			} else if tt.title == "" {
-				assert.True(t, tt.expectError)
-				assert.Contains(t, tt.errorMsg, "--title is required")
-			} else {
-				assert.False(t, tt.expectError)
-			}
-		})
-	}
-}
-
 // Test validation logic with mock validation function
 func TestValidationLogicWithMock(t *testing.T) {
 	// Mock validation function that mimics the logic in CreatePageAction
