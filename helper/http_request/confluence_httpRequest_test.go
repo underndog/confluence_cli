@@ -25,9 +25,6 @@ func setupTestEnvironment(t *testing.T) func() {
 }
 
 func TestCreateConfluencePage(t *testing.T) {
-	// Skip this test as it requires a real HTTP server
-	t.Skip("Skipping HTTP integration test - requires real server")
-
 	cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
@@ -41,9 +38,6 @@ func TestCreateConfluencePage(t *testing.T) {
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
-	// Skip this test as it requires a real HTTP server
-	t.Skip("Skipping HTTP integration test - requires real server")
-
 	cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
