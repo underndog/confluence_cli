@@ -52,10 +52,24 @@ func TestGetConfluencePagesByTitle(t *testing.T) {
 
 // Test environment setup without HTTP calls
 func TestEnvironmentSetup(t *testing.T) {
-	cleanup := setupTestEnvironment(t)
-	defer cleanup()
+	// Save original env
+	originalEmail := os.Getenv("EMAIL")
+	originalToken := os.Getenv("API_TOKEN")
+	originalURL := os.Getenv("CONFLUENCE_URL")
 
-	// Test that environment variables are set correctly
+	// Restore after test
+	defer func() {
+		os.Setenv("EMAIL", originalEmail)
+		os.Setenv("API_TOKEN", originalToken)
+		os.Setenv("CONFLUENCE_URL", originalURL)
+	}()
+
+	// Set test values
+	os.Setenv("EMAIL", "test@example.com")
+	os.Setenv("API_TOKEN", "testtoken")
+	os.Setenv("CONFLUENCE_URL", "http://localhost")
+
+	// Verify
 	if os.Getenv("EMAIL") != "test@example.com" {
 		t.Error("EMAIL environment variable not set correctly")
 	}
