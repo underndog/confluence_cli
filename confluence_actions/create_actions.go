@@ -15,25 +15,26 @@ import (
 func CreatePageAction(c *cli.Context) error {
 	spaceId := c.String("space-id")
 	if spaceId == "" {
-		log.Error("Please provide --space-id xxxx")
-		return fmt.Errorf("please provide --space-id xxxx")
+		return fmt.Errorf("--space-id is required")
 	}
 
 	parentPageId := c.String("parent-page-id")
 	if parentPageId == "" {
-		log.Error("Please provide --parent-page-id xxxx")
-		return fmt.Errorf("please provide --parent-page-id xxxx")
+		return fmt.Errorf("--parent-page-id is required")
 	}
 
 	title := c.String("title")
 	if title == "" {
-		log.Error("Please provide --title xxxx")
-		return fmt.Errorf("please provide --title xxxx")
+		return fmt.Errorf("--title is required")
 	}
 
 	bodyValueFromFile := c.String("body-value-from-file")
 	bodyValue := c.String("body-value")
 	var contentPage string
+
+	currentTime := time.Now()
+	formattedDate := currentTime.Format("2006-01")
+	formattedDateTime := currentTime.Format("2006-01-02 15:04:05")
 
 	if bodyValueFromFile != "" {
 		data, err := os.ReadFile(bodyValueFromFile)
@@ -47,123 +48,103 @@ func CreatePageAction(c *cli.Context) error {
 	}
 	// If neither is provided, contentPage remains empty string
 
+	// Create the page
+	log.Info("Creating page...")
+	resp, err := http_request.CreateConfluencePage(spaceId, parentPageId, fmt.Sprintf("[%s] %s", formattedDate, title), contentPage)
+	if err != nil {
+		return err
+	}
 	var nextParentID string
-	// Get the current date
-	currentTime := time.Now()
-	// Format the date to "YYYY-MM"
-	formattedDate := currentTime.Format("2006-01")
-	formattedDateTime := currentTime.Format("2006-01-02 15:04:05")
-
-	resp, err := http_request.CreateConfluencePage(spaceId, parentPageId, fmt.Sprintf("[%s] %s", formattedDate, title), "INTEGRATION TESTING RESULT")
-	if err != nil {
-		log.Error("Error when Create Page via Confluence API: ", err)
-		return err
-	}
-	if resp.Status() == "400 Bad Request" {
+	if resp.StatusCode() >= 400 {
 		var errResponse req.ErrorResponse
-		err := json.Unmarshal(resp.Body(), &errResponse)
-		if err != nil {
-			log.Error("Error parsing JSON:", err)
-			return err
-		}
-		if errResponse.Errors[0].Title == "A page with this title already exists: A page already exists with the same TITLE in this space" {
-			respPages, err := http_request.GetConfluencePagesByTitle(fmt.Sprintf("[%s] %s", formattedDate, title))
-			if err != nil {
-				log.Error("Error when Get Page via Confluence API: ", err)
-				return err
+		if err := json.Unmarshal(resp.Body(), &errResponse); err == nil && len(errResponse.Errors) > 0 {
+			if errResponse.Errors[0].Title == "A page with this title already exists: A page already exists with the same TITLE in this space" {
+				respPages, err := http_request.GetConfluencePagesByTitle(fmt.Sprintf("[%s] %s", formattedDate, title))
+				if err != nil {
+					return err
+				}
+				var pagesInfo req.PagesInfo
+				if err = json.Unmarshal(respPages.Body(), &pagesInfo); err == nil && len(pagesInfo.Results) > 0 {
+					nextParentID = pagesInfo.Results[0].ID
+				}
 			}
-			var pagesInfo req.PagesInfo
-			err = json.Unmarshal(respPages.Body(), &pagesInfo)
-			if err != nil {
-				log.Error("Error parsing JSON:", err)
-				return err
-			}
-			nextParentID = pagesInfo.Results[0].ID
 		}
-	} else if resp.Status() == "200 OK" {
-		var createdResultPage req.CreatePageResult
-		err := json.Unmarshal(resp.Body(), &createdResultPage)
-		if err != nil {
-			log.Error("Error parsing JSON: ", err)
-			return err
-		}
-		nextParentID = createdResultPage.ID
 	} else {
-		log.Info(resp.Status())
-		return fmt.Errorf("status Response from Confluence: %s", resp.Status())
+		var createdResultPage req.CreatePageResult
+		if err := json.Unmarshal(resp.Body(), &createdResultPage); err == nil {
+			nextParentID = createdResultPage.ID
+		}
+	}
+	if nextParentID == "" {
+		return fmt.Errorf("could not determine parent page ID for content page")
 	}
 
-	//blockCode, err := helper.FormatForConfluenceCodeMacro(bodyValueFromFile)
-	//if err != nil {
-	//	log.Error(err)
-	//	return err
-	//}
-
-	_, err = http_request.CreateConfluencePage(spaceId, nextParentID, fmt.Sprintf("[%s] %s", formattedDateTime, title), contentPage)
+	childResp, err := http_request.CreateConfluencePage(spaceId, nextParentID, fmt.Sprintf("[%s] %s", formattedDateTime, title), contentPage)
 	if err != nil {
-		log.Error("Error when Create Page via Confluence API: ", err)
 		return err
 	}
+	if childResp.StatusCode() >= 300 {
+		return fmt.Errorf("failed to create content page with status %s: %s", childResp.Status(), string(childResp.Body()))
+	}
+	var childPageResult req.CreatePageResult
+	if err := json.Unmarshal(childResp.Body(), &childPageResult); err != nil {
+		return err
+	}
+	createdPageId := childPageResult.ID
+	log.Info("Successfully created content page with ID:", createdPageId)
 
-	// Check if file attachment is requested
 	filePath := c.String("file")
 	if filePath != "" {
-		// Check if file exists
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
-			log.Error("File does not exist:", filePath)
-			return fmt.Errorf("file does not exist: %s", filePath)
+			return fmt.Errorf("attachment file does not exist: %s", filePath)
 		}
 
-		// Get the created child page ID for attachment
-		// Use a more specific search to avoid race conditions
-		childPageTitle := fmt.Sprintf("[%s] %s", formattedDateTime, title)
-		respPages, err := http_request.GetConfluencePagesByTitle(childPageTitle)
-		if err != nil {
-			log.Error("Error when Get Page via Confluence API: ", err)
-			return err
-		}
-
-		var pagesInfo req.PagesInfo
-		err = json.Unmarshal(respPages.Body(), &pagesInfo)
-		if err != nil {
-			log.Error("Error parsing JSON: ", err)
-			return err
-		}
-
-		// Find the most recently created page with the exact title
-		var createdPageId string
-		found := false
-		for _, page := range pagesInfo.Results {
-			if page.Title == childPageTitle {
-				createdPageId = page.ID
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Error("Could not find created page for attachment")
-			return fmt.Errorf("could not find created page for attachment")
-		}
-
-		// Upload attachment to the created child page
-		log.Info("Uploading attachment to created page:", createdPageId)
-		log.Info("Uploading attachment:", filePath)
 		uploadResp, err := http_request.UploadConfluenceAttachment(createdPageId, filePath)
 		if err != nil {
-			log.Error("Error when uploading file via Confluence API:", err)
 			return err
 		}
 
-		if uploadResp.StatusCode() >= 200 && uploadResp.StatusCode() < 300 {
+		if uploadResp.StatusCode() < 300 {
 			log.Info("File uploaded successfully as attachment!")
+
+			// Enable macro by default when file is uploaded, unless explicitly disabled
+			shouldEmbed := true // Always enable macro when file is present
+			if shouldEmbed {
+				log.Info("Embedding attached file into page content...")
+
+				resp, err := http_request.GetConfluencePageByID(createdPageId + "?body-format=storage")
+				if err != nil {
+					return err
+				}
+				var currentPage req.CreatePageResult
+				if err := json.Unmarshal(resp.Body(), &currentPage); err != nil {
+					return err
+				}
+
+				macroXHTML := fmt.Sprintf(
+					`<p><ac:structured-macro ac:name="attachments" ac:schema-version="1"></ac:structured-macro></p>`,
+				)
+				newBody := currentPage.Body.Storage.Value + macroXHTML
+
+				payload := req.UpdatePagePayload{
+					ID:      createdPageId,
+					Status:  "current",
+					Title:   currentPage.Title,
+					Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
+					Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Embedded attached file via CLI"},
+				}
+
+				embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
+				if err != nil || embedResp.StatusCode() >= 300 {
+					return fmt.Errorf("embedding attachment failed")
+				}
+				log.Info("File embedded successfully into page.")
+			}
 		} else {
-			log.Error("Upload failed with status:", uploadResp.Status())
-			log.Error("Response body:", string(uploadResp.Body()))
 			return fmt.Errorf("upload failed with status: %s", uploadResp.Status())
 		}
 	}
 
-	log.Info("Create Pages Successfully")
+	log.Info("All operations completed successfully.")
 	return nil
 }

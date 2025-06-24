@@ -3,8 +3,9 @@ package main
 import (
 	"confluence_cli/confluence_commands"
 	"confluence_cli/log"
-	"github.com/urfave/cli/v2"
 	"os"
+
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -19,6 +20,8 @@ func main() {
 		Usage: "Integrate with Confluence Website easily by Command",
 		Commands: []*cli.Command{
 			confluence_commands.CreatePageCommand(),
+			confluence_commands.UpdatePageCommand(),
+			confluence_commands.UploadCommand(),
 		},
 	}
 	err := app.Run(os.Args)

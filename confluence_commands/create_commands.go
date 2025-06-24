@@ -38,22 +38,7 @@ func CreatePageCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "file",
-						Usage: "Path to the file to upload as attachment after creating the page",
-					},
-				},
-			},
-			{
-				Name:   "attachment",
-				Usage:  "Upload a file as attachment to a Confluence page",
-				Action: confluence_actions.UploadAttachmentAction,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "page-id",
-						Usage: "The ID of the page where the file will be uploaded as attachment",
-					},
-					&cli.StringFlag{
-						Name:  "file",
-						Usage: "Path to the file to upload",
+						Usage: "Path to the file to upload as attachment to the page (automatically embedded)",
 					},
 				},
 			},
