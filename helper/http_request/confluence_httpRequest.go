@@ -105,3 +105,40 @@ func UploadConfluenceAttachment(pageId, filePath string) (*resty.Response, error
 
 	return resp, nil
 }
+
+func GetConfluencePageByID(pageId string) (*resty.Response, error) {
+	// Create a Resty Client
+	client := resty.New()
+
+	email := helper.GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
+	apiToken := helper.GetEnvOrDefault("API_TOKEN", "nimtechnology")
+
+	resp, err := client.R().
+		SetBasicAuth(email, apiToken).
+		SetHeader("Accept", "application/json").
+		Get(helper.GetEnvOrDefault("CONFLUENCE_URL", "https://nimtechnology.atlassian.net") + "/wiki/api/v2/pages/" + pageId)
+
+	if err != nil {
+		log.Error(err)
+	}
+	return resp, err
+}
+
+func UpdateConfluencePage(pageId string, payload req.UpdatePagePayload) (*resty.Response, error) {
+	client := resty.New()
+	email := helper.GetEnvOrDefault("EMAIL", "dc.nim94@gmail.com")
+	apiToken := helper.GetEnvOrDefault("API_TOKEN", "nimtechnology")
+
+	resp, err := client.R().
+		SetBasicAuth(email, apiToken).
+		SetHeader("Accept", "application/json").
+		SetHeader("Content-Type", "application/json").
+		SetBody(payload).
+		Put(helper.GetEnvOrDefault("CONFLUENCE_URL", "https://nimtechnology.atlassian.net") + "/wiki/api/v2/pages/" + pageId)
+
+	if err != nil {
+		log.Error("Error updating page:", err)
+		return nil, err
+	}
+	return resp, nil
+}

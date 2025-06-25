@@ -13,19 +13,19 @@ func TestFormatForConfluenceCodeMacro(t *testing.T) {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
 	defer os.Remove(tmpFile.Name())
-	
+
 	testContent := `package main
 	
 	func main() {
 		println("Hello, World!")
 	}`
 	if _, err := tmpFile.WriteString(testContent); err != nil {
-			t.Fatalf("failed to write to temp file: %v", err)
-		}
+		t.Fatalf("failed to write to temp file: %v", err)
+	}
 	if err := tmpFile.Close(); err != nil {
 		t.Fatalf("failed to close temp file: %v", err)
 	}
-	
+
 	result, err := FormatForConfluenceCodeMacro(tmpFile.Name())
 	if err != nil {
 		t.Errorf("unexpected error for valid file: %v", err)

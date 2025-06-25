@@ -1,119 +1,299 @@
-# Confluence CLI Command Explanation
+# Confluence CLI - Complete Command Reference
 
-The `confluence_cli` command is used for interacting with Confluence's API via the command line. Here's a breakdown of the command for creating a new page in Confluence:
+The `confluence_cli` is a powerful command-line tool designed for seamless interaction with Confluence's API. It provides comprehensive functionality for creating pages, updating content, managing attachments, and displaying file attachments with beautiful macros.
 
-### 1. Create Page
-```shell
-confluence_cli create page \
---space-id {space id} \
---parent-page-id {parent page id} \
---title {tile of page} \
---body-value-from-file {file path to file}
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Commands Overview](#commands-overview)
+- [Environment Setup](#environment-setup)
+- [Create Page Command](#create-page-command)
+- [Upload Attachment Command](#upload-attachment-command)
+- [Update Page Command](#update-page-command)
+- [Complete Usage Examples](#complete-usage-examples)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
+- [Notes and Best Practices](#notes-and-best-practices)
+
+## 🆕 Latest Update
+
+**NEW FEATURE**: Macro embedding is now automatically enabled when using the `--file` flag. This means:
+- When you upload a file with `--file`, it will automatically be embedded and displayed on the page
+- This provides a better user experience by showing attachments directly on the page
+- No additional flags needed - just use `--file` and the file will be embedded automatically
+
+## Quick Start
+
+### 1. Environment Setup
+```bash
+# Load environment variables
+source confluence_env.sh
+
+# Or set manually
+export CONFLUENCE_URL="https://sample.atlassian.net/"
+export EMAIL="your-email@gmail.com"
+export API_TOKEN="your-api-token"
 ```
 
-### 2. Upload Attachment
-```shell
-confluence_cli create attachment \
---page-id {page id} \
---file {file path}
+### Required Environment Variables
+
+#### `CONFLUENCE_URL`
+- **Description:** Your Confluence instance URL
+- **Format:** `https://your-domain.atlassian.net/`
+- **Required:** Yes
+
+#### `EMAIL`
+- **Description:** Your Confluence account email
+- **Format:** `your-email@company.com`
+- **Required:** Yes
+
+#### `API_TOKEN`
+- **Description:** Your Confluence API token
+- **Format:** `ATATT3x...` (long string)
+- **Required:** Yes
+
+### 2. Build the Tool
+```bash
+cd confluence_cli
+go build -o confluence_cli
+chmod +x confluence_cli
 ```
 
-# Command Components
+## Commands Overview
 
-- `confluence_cli`: The name of the CLI tool designed for Confluence operations.
+The tool provides three main commands:
+
+1. **`create page`** - Create new Confluence pages with optional content and attachments (attachments are always embedded)
+2. **`update page`** - Update existing pages with new content and/or attachments (attachments are always embedded)
+3. **`upload attachment`** - Upload attachments to existing pages without changing the page content
 
 ## Create Page Command
 
-- `create page`: The action to be performed. `create` indicates creation of a new entity, and `page` specifies that the entity is a page within Confluence.
+Creates new Confluence pages with optional content and attachments.
 
-### Options for Create Page
+### Basic Syntax
+```shell
+confluence_cli create page \
+  --space-id {space id} \
+  --parent-page-id {parent page id} \
+  --title {title of page} \
+  [--body-value {content}] \
+  [--body-value-from-file {file path}] \
+  [--file {attachment file path}]
+```
+### Required Parameters
 
-### `--space-id {space id}`:
-- **Description:** Specifies the ID of the space where the new page will be created.
-- **Usage:** Replace `{space id}` with the actual space ID.
+#### `--space-id {space id}`
+- **Description:** Specifies the ID of the space where the new page will be created
+- **Usage:** Replace `{space id}` with the actual space ID
+- **Required:** Yes
+- **How to find:** Space settings → Space details. Or call API
 
-### `--parent-page-id {parent page id}`:
-- **Description:** Indicates the ID of the parent page under which the new page will be nested.
-- **Usage:** Replace `{parent page id}` with the actual parent page ID.
+#### `--parent-page-id {parent page id}`
+- **Description:** Indicates the ID of the parent page under which the new page will be nested
+- **Usage:** Replace `{parent page id}` with the actual parent page ID
+- **Required:** Yes
+- **How to find:** Page URL or Page Information. Or call API
 
-### `--title {title of page}`:
-- **Description:** Sets the title for the new Confluence page.
-- **Usage:** Replace `{title of page}` with the desired page title.
+#### `--title {title of page}`
+- **Description:** Sets the title for the new Confluence page
+- **Usage:** Replace `{title of page}` with the desired page title
+- **Required:** Yes
+- **Note:** Tool automatically adds date prefixes: `[YYYY-MM]` and `[YYYY-MM-DD HH:MM:SS]`
 
-### `--body-value {value path to page}`:
-- **Description:** Sets the content for the new Confluence page.
-- **Usage:** Replace `{file path to file}` with the desired page content.
+### Optional Parameters
 
-### `--body-value-from-file {file path to file}`:
-- **Description:** Specifies the file path that contains the content for the page body.
-- **Usage:** Replace `{file path to file}` with the actual path to the content file.
+#### `--body-value {content}`
+- **Description:** Sets the content for the page directly
+- **Usage:** Replace `{content}` with the desired page content
+- **Required:** No (optional)
+- **Example:** `--body-value "This is my page content"`
+
+#### `--body-value-from-file {file path}`
+- **Description:** Specifies the file path that contains the content for the page body
+- **Usage:** Replace `{file path}` with the actual path to the content file
+- **Required:** No (optional)
+- **Example:** `--body-value-from-file "/path/to/content.html"`
+
+#### `--file {attachment file path}`
+- **Description:** Path to the file to upload as attachment. The file will always be embedded and displayed on the page.
+- **Usage:** Replace `{attachment file path}` with the actual path to the file (use absolute path for best results)
+- **Required:** No (optional)
+- **Note:** For create page, the attachment will be uploaded to the child page (nested page) that is created
+- **Example:** `--file "/home/user/documents/report.pdf"`
 
 ## Upload Attachment Command
 
-- `create attachment`: The action to upload a file as an attachment to an existing Confluence page.
+Uploads attachments to existing Confluence pages without modifying the page content.
 
-### Options for Upload Attachment
-
-#### `--page-id {page id}`:
-- **Description:** The Content ID (Page ID) of the Confluence page where the file will be uploaded as attachment.
-- **Usage:** Replace `{page id}` with the actual page ID.
-- **How to find Page ID:**
-  - From URL: `https://<CONFLUENCE_URL>/wiki/spaces/SPACE/pages/589825/Page+Title`
-  - Page ID is: `589825`
-  - Or use Confluence UI: Page → "..." → "Page Information" → Copy "Page ID"
-
-#### `--file {file path}`:
-- **Description:** Path to the file to upload as attachment.
-- **Usage:** Replace `{file path}` with the actual path to the file.
-- **Supported:** All file types supported by Confluence (txt, pdf, images, etc.)
-
-## Environment Variables.
-
-In order to connect Your Confluence. You must configure the environments such as:   
-
-`CONFLUENCE_URL`:   
-- **Description:** your confluence link such as: `https://nimtechnology.atlassian.net`
-
-`EMAIL`:
-- **Description:** your email to access Confluence API such as: `mr.nim@nimtechnology.com`
-
-`API_TOKEN`:
-- **Description:** The Token is used to access Confluence API such as: `XXXXXXXXXXXXXX`
-- **Refer to:** https://nimtechnology.com/2024/01/05/confluence-integrate-with-confluence-by-api/
-
-## How build Binary file.
-
-### On Windows
+### Basic Syntax
 ```shell
-go build -o confluence_cli.exe
+confluence_cli upload attachment \
+  --page-id {page id} \
+  --file {attachment file path}
 ```
 
-### On Linux/Mac:
+### Required Parameters
+
+#### `--page-id {page id}`
+- **Description:** ID of the page to upload attachment to
+- **Usage:** Replace `{page id}` with the actual page ID
+- **Required:** Yes
+- **How to find:** Page URL or Page Information or call API
+
+#### `--file {attachment file path}`
+- **Description:** Path to the file to upload as attachment
+- **Usage:** Replace `{attachment file path}` with the actual path to the file
+- **Required:** Yes
+- **Note:** File will be uploaded as attachment but not embedded in the page content
+- **Example:** `--file "/home/user/documents/report.pdf"`
+
+## Update Page Command
+
+Updates existing Confluence pages with new content and/or attachments.
+
+### Basic Syntax
 ```shell
-go build -o confluence_cli
+confluence_cli update page \
+  --page-id {page id} \
+  [--body-value {content}] \
+  [--body-value-from-file {file path}] \
+  [--file {attachment file path}]
 ```
 
-## Usage Examples
+### Required Parameters
 
-### Create a Page:
-```shell
-### On Windows
-.\confluence_cli.exe create page --space-id 98432 --parent-page-id 589825 --title ahihi --body-value-from-file result.txt
-### On Linux/Mac
-./confluence_cli create page --space-id 98432 --parent-page-id 589825 --title "Test Page" --body-value-from-file result.txt
+#### `--page-id {page id}`
+- **Description:** ID of the page to update
+- **Usage:** Replace `{page id}` with the actual page ID
+- **Required:** Yes
+- **How to find:** Page URL or Page Information or call API
+
+### Optional Parameters
+
+#### `--body-value {content}`
+- **Description:** Sets the content for the page directly
+- **Usage:** Replace `{content}` with the desired page content
+- **Required:** No (optional)
+- **Example:** `--body-value "This is my page content"`
+
+#### `--body-value-from-file {file path}`
+- **Description:** Specifies the file path that contains the content for the page body
+- **Usage:** Replace `{file path}` with the actual path to the content file
+- **Required:** No (optional)
+- **Example:** `--body-value-from-file "/path/to/content.html"`
+
+#### `--file {attachment file path}`
+- **Description:** Path to the file to upload as attachment
+- **Usage:** Replace `{attachment file path}` with the actual path to the file
+- **Required:** No (optional)
+- **Example:** `--file "/home/user/documents/report.pdf"`
+
+## Complete Usage Examples
+
+### Create Page Examples
+
+#### 1. Create page with empty content
+```bash
+./confluence_cli create page \
+  --space-id "SPACE_ID" \
+  --parent-page-id "123456" \
+  --title "Test Page"
 ```
 
-### Upload Attachment:
-```shell
-### On Windows
-.\confluence_cli.exe create attachment --page-id 589825 --file /path/to/file
-### On Linux/Mac
-./confluence_cli create attachment --page-id 589825 --file /path/to/file
+#### 2. Create page with direct content
+```bash
+./confluence_cli create page \
+  --space-id "SPACE_ID" \
+  --parent-page-id "123456" \
+  --title "Test Page" \
+  --body-value "This is the page content"
 ```
 
-## API Referenc
+#### 3. Create page with content from file
+```bash
+./confluence_cli create page \
+  --space-id "SPACE" \
+  --parent-page-id "123456" \
+  --title "Test Page" \
+  --body-value-from-file "/path/to/content.txt"
+```
+
+#### 4. Create page with content and attachment
+```bash
+./confluence_cli create page \
+  --space-id "SPACE" \
+  --parent-page-id "123456" \
+  --title "Test Page" \
+  --body-value "Content here" \
+  --file "/path/to/attachment.txt"
+```
+**Note:** File will be automatically embedded and displayed on the page.
+
+#### 5. Create page with content from file and attachment
+```bash
+./confluence_cli create page \
+  --space-id "SPACE_ID" \
+  --parent-page-id "123456" \
+  --title "Test Page" \
+  --body-value-from-file "/path/to/content.html" \
+  --file "/path/to/attachment.pdf"
+```
+**Note:** File will be automatically embedded and displayed on the page.
+
+### Update Page Examples
+
+#### 1. Update page with direct content
+```bash
+./confluence_cli update page \
+  --page-id "123456" \
+  --body-value "Updated content"
+```
+
+#### 2. Update page with content from file
+```bash
+./confluence_cli update page \
+  --page-id "4118873955" \
+  --body-value-from-file "/path/to/updated-content.txt"
+```
+
+#### 3. Update page with content and upload attachment
+```bash
+./confluence_cli update page \
+  --page-id "4118873955" \
+  --body-value "Updated content" \
+  --file "/path/to/new-attachment.pdf"
+```
+**Note:** File will be automatically embedded and displayed on the page.
+
+#### 4. Update page with content from file and upload attachment
+```bash
+./confluence_cli update page \
+  --page-id "4118873955" \
+  --body-value-from-file "/path/to/report.html" \
+  --file "/path/to/report.html"
+```
+**Note:** File will be automatically embedded and displayed on the page.
+
+### Upload Attachment Examples
+
+#### 1. Upload single attachment to existing page
+```bash
+./confluence_cli upload attachment \
+  --page-id "123456" \
+  --file "/path/to/document.pdf"
+```
+**Note:** File will be uploaded as attachment but not embedded in the page content.
+
+
+## API Reference
 
 This tool uses the following Confluence REST APIs:
-- **Create Page:** `POST /wiki/api/v2/pages`
-- **Upload Attachment:** `POST /wiki/rest/api/content/{pageId}/child/attachment`
-- **Get Pages by Title:** `GET /wiki/api/v2/pages?title={title}`
+
+| Operation | Method | Endpoint | Description |
+|-----------|--------|----------|-------------|
+| **Create Page** | `POST` | `/wiki/api/v2/pages` | Creates new pages |
+| **Update Page** | `PUT` | `/wiki/api/v2/pages/{pageId}` | Updates existing pages |
+| **Get Page** | `GET` | `/wiki/api/v2/pages/{pageId}` | Retrieves page details |
+| **Upload Attachment** | `POST` | `/wiki/rest/api/content/{pageId}/child/attachment` | Uploads files as attachments |
+| **Get Pages by Title** | `GET` | `/wiki/api/v2/pages?title={title}` | Searches pages by title |
