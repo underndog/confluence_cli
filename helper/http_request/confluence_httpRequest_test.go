@@ -7,11 +7,9 @@ import (
 )
 
 func setupTestEnvironment(t *testing.T) func() {
-	// Skip tests if running in CI or if no local server
-	if os.Getenv("CI") != "" || os.Getenv("SKIP_HTTP_TESTS") != "" {
-		t.Skip("Skipping HTTP integration tests")
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping integration test in CI environment")
 	}
-
 	log.InitLogger(true)
 	os.Setenv("EMAIL", "test@example.com")
 	os.Setenv("API_TOKEN", "testtoken")
