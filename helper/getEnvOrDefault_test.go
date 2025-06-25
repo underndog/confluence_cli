@@ -100,15 +100,21 @@ func TestGetEnvOrDefault_ConfluenceURL(t *testing.T) {
 			// Set environment variables
 			if tt.envURL != "" {
 				os.Setenv("CONFLUENCE_URL", tt.envURL)
-				defer os.Unsetenv("CONFLUENCE_URL")
+				t.Cleanup(func() {
+					os.Unsetenv("CONFLUENCE_URL")
+				})
 			}
 			if tt.envEmail != "" {
 				os.Setenv("EMAIL", tt.envEmail)
-				defer os.Unsetenv("EMAIL")
+				t.Cleanup(func() {
+					os.Unsetenv("EMAIL")
+				})
 			}
 			if tt.envToken != "" {
 				os.Setenv("API_TOKEN", tt.envToken)
-				defer os.Unsetenv("API_TOKEN")
+				t.Cleanup(func() {
+					os.Unsetenv("API_TOKEN")
+				})
 			}
 
 			url := GetEnvOrDefault("CONFLUENCE_URL", "https://example.atlassian.net")
