@@ -2,7 +2,7 @@ module confluence_cli
 
 go 1.22
 
-toolchain go1.24.4
+toolchain go1.25.0
 
 require (
 	github.com/go-resty/resty/v2 v2.16.5
