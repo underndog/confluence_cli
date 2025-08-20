@@ -10,45 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test parseTestResultsFromHTML function for update actions
-func TestUpdateActionsParseTestResultsFromHTML(t *testing.T) {
-	tests := []struct {
-		name           string
-		htmlContent    string
-		expectedFailed int
-		expectedTotal  int
-	}{
-		{
-			name: "Parse test results with failed tests",
-			htmlContent: `
-				<div>Total Tests: 100</div>
-				<div>Failed: 5</div>
-				<div>Passed: 95</div>
-			`,
-			expectedFailed: 5,
-			expectedTotal:  100,
-		},
-		{
-			name: "Parse test results with no failed tests",
-			htmlContent: `
-				<div>Total Tests: 50</div>
-				<div>Failed: 0</div>
-				<div>Passed: 50</div>
-			`,
-			expectedFailed: 0,
-			expectedTotal:  50,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			failedCount, totalCount := parseTestResultsFromHTML(tt.htmlContent)
-			assert.Equal(t, tt.expectedFailed, failedCount)
-			assert.Equal(t, tt.expectedTotal, totalCount)
-		})
-	}
-}
-
 // Test macro detection logic
 func TestMacroDetectionLogic(t *testing.T) {
 	tests := []struct {

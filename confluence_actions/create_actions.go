@@ -14,48 +14,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Parse test results from HTML content to determine Overall Status
-func parseTestResultsFromHTML(htmlContent string) (failedCount, totalCount int) {
-	// Default values
-	failedCount = 0
-	totalCount = 0
-
-	// Simple regex to find test counts
-	// Look for patterns like "Failed: 47" or "Total Tests: 438"
-	failedMatch := regexp.MustCompile(`Failed:\s*(\d+)`)
-	totalMatch := regexp.MustCompile(`Total Tests:\s*(\d+)`)
-
-	if failedMatches := failedMatch.FindStringSubmatch(htmlContent); len(failedMatches) > 1 {
-		fmt.Sscanf(failedMatches[1], "%d", &failedCount)
-		log.Info("Found failed count:", failedCount)
-	}
-
-	if totalMatches := totalMatch.FindStringSubmatch(htmlContent); len(totalMatches) > 1 {
-		fmt.Sscanf(totalMatches[1], "%d", &totalCount)
-		log.Info("Found total count:", totalCount)
-	}
-
-	// If no matches found, try alternative patterns
-	if failedCount == 0 && totalCount == 0 {
-		// Try to find in different format
-		failedMatch2 := regexp.MustCompile(`<strong>Failed:</strong>\s*(\d+)`)
-		totalMatch2 := regexp.MustCompile(`<strong>Total Tests:</strong>\s*(\d+)`)
-
-		if failedMatches := failedMatch2.FindStringSubmatch(htmlContent); len(failedMatches) > 1 {
-			fmt.Sscanf(failedMatches[1], "%d", &failedCount)
-			log.Info("Found failed count (alt):", failedCount)
-		}
-
-		if totalMatches := totalMatch2.FindStringSubmatch(htmlContent); len(totalMatches) > 1 {
-			fmt.Sscanf(totalMatches[1], "%d", &totalCount)
-			log.Info("Found total count (alt):", totalCount)
-		}
-	}
-
-	log.Info("Final parsed results - Failed:", failedCount, "Total:", totalCount)
-	return failedCount, totalCount
-}
-
 // Helper function to create update page payload
 func createUpdatePagePayload(pageId string, title string, newBody string, version int, message string) req.UpdatePagePayload {
 	return req.UpdatePagePayload{

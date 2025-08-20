@@ -14,66 +14,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Test parseTestResultsFromHTML function
-func TestParseTestResultsFromHTML(t *testing.T) {
-	// Initialize logger to avoid nil pointer dereference
-	log.InitLogger(true)
-
-	tests := []struct {
-		name           string
-		htmlContent    string
-		expectedFailed int
-		expectedTotal  int
-	}{
-		{
-			name: "Parse test results with failed tests",
-			htmlContent: `
-				<div>Total Tests: 100</div>
-				<div>Failed: 5</div>
-				<div>Passed: 95</div>
-			`,
-			expectedFailed: 5,
-			expectedTotal:  100,
-		},
-		{
-			name: "Parse test results with no failed tests",
-			htmlContent: `
-				<div>Total Tests: 50</div>
-				<div>Failed: 0</div>
-				<div>Passed: 50</div>
-			`,
-			expectedFailed: 0,
-			expectedTotal:  50,
-		},
-		{
-			name: "Parse test results with alternative format",
-			htmlContent: `
-				<div><strong>Total Tests:</strong> 75</div>
-				<div><strong>Failed:</strong> 3</div>
-			`,
-			expectedFailed: 3,
-			expectedTotal:  75,
-		},
-		{
-			name: "Parse test results with no matches",
-			htmlContent: `
-				<div>Some other content</div>
-				<div>No test results here</div>
-			`,
-			expectedFailed: 0,
-			expectedTotal:  0,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			failedCount, totalCount := parseTestResultsFromHTML(tt.htmlContent)
-
-			assert.Equal(t, tt.expectedFailed, failedCount)
-			assert.Equal(t, tt.expectedTotal, totalCount)
-		})
-	}
+func TestCreatePageCommand_Structure(t *testing.T) {
+	// ... existing code ...
 }
+
+func TestCreatePageCommand(t *testing.T) {
+	// ... existing code ...
+}
+
+// Remove TestParseTestResultsFromHTML function completely
 
 // Test regex pattern matching for Overall Status
 func TestOverallStatusPatternMatching(t *testing.T) {
