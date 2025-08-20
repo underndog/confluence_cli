@@ -1,27 +1,30 @@
-## Confluence CLI - Complete Command Reference
+# Confluence CLI - Complete Command Reference
 
-The `confluence_cli` is a powerful command-line tool designed for seamless interaction with Confluence's API. It provides comprehensive functionality for creating pages, updating content, managing attachments, and displaying file attachments with beautiful macros.
+The `confluence_cli` is a powerful command-line tool designed for seamless interaction with Confluence's API. It provides comprehensive functionality for creating pages, updating content, managing attachments, and automatically embedding macros including attachment macros and action list macros.
 
 ## Table of Contents
 
-*   [Quick Start](#quick-start)
-*   [Commands Overview](#commands-overview)
-*   [Environment Setup](#environment-setup)
-*   [Create Page Command](#create-page-command)
-*   [Upload Attachment Command](#upload-attachment-command)
-*   [Update Page Command](#update-page-command)
-*   [Complete Usage Examples](#complete-usage-examples)
-*   [API Reference](#api-reference)
-*   [Troubleshooting](#troubleshooting)
-*   [Notes and Best Practices](#notes-and-best-practices)
+- [Quick Start](#quick-start)
+- [Commands Overview](#commands-overview)
+- [Environment Setup](#environment-setup)
+- [Create Page Command](#create-page-command)
+- [Upload Attachment Command](#upload-attachment-command)
+- [Update Page Command](#update-page-command)
+- [Automatic Macro Features](#automatic-macro-features)
+- [Complete Usage Examples](#complete-usage-examples)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
+- [Notes and Best Practices](#notes-and-best-practices)
 
-## 🆕 Latest Update
+## 🆕 Latest Updates
 
-**NEW FEATURE**: Macro embedding is now automatically enabled when using the `--file` flag. This means:
+**NEW FEATURES**:
 
-*   When you upload a file with `--file`, it will automatically be embedded and displayed on the page
-*   This provides a better user experience by showing attachments directly on the page
-*   No additional flags needed - just use `--file` and the file will be embedded automatically
+1. **Attachment Macro Management**: Automatically enables attachment macros when files are uploaded
+2. **Smart Macro Detection**: Detects missing attachment macros and action list macros and re-enables them automatically
+3. **Page Version Management**: Handles page versions correctly during updates
+4. **File Upload Integration**: Seamlessly uploads and embeds file attachments
+5. **Helper Function System**: Comprehensive helper functions for macro creation and management
 
 ## Quick Start
 
@@ -77,27 +80,17 @@ docker run -it --rm \
 --name confluence-cli quay.io/underndog/confluence_cli:latest create page --space-id "<space_id>" --parent-page-id "<parent_page_id>" --title "<Tile of Page>" --body-value <content>
 ```
 
-Example:
-
-```plaintext
-docker run -it --rm \
--e API_TOKEN="ATATT3xFfGF02YUScHu9GuuqycnLcSzwhorVf3sYwEwwAEG08c5LYGRg7ltuZmPnYUvoRhkkM1-bM4HpT9g9oNjOfv37P8jdOM0HfuSmsSwwd-8IEabKemAH0gattqzH7dt-6o-nP_vpAvN1aQI=77E0A659" \
--e CONFLUENCE_URL='https://opswat.atlassian.net' \
--e EMAIL="devops.nim@nimtechnology.com" \
---name confluence-cli quay.io/underndog/confluence_cli:latest create page --space-id "2703951026" --parent-page-id "4114481660" --title "Test report 11" --body-value test
-```
-
 ## Commands Overview
 
 The tool provides three main commands:
 
-1.  `**create page**` - Create new Confluence pages with optional content and attachments (attachments are always embedded)
-2.  `**update page**` - Update existing pages with new content and/or attachments (attachments are always embedded)
-3.  `**upload attachment**` - Upload attachments to existing pages without changing the page content
+1. **`create page`** - Create new Confluence pages with optional content, attachments, and automatic macro embedding
+2. **`update page`** - Update existing pages with new content and/or attachments, ensuring macros remain active
+3. **`upload attachment`** - Upload attachments to existing pages without changing the page content
 
 ## Create Page Command
 
-Creates new Confluence pages with optional content and attachments.
+Creates new Confluence pages with optional content, attachments, and automatic macro embedding.
 
 ### Basic Syntax
 
@@ -189,7 +182,7 @@ confluence_cli upload attachment \
 
 ## Update Page Command
 
-Updates existing Confluence pages with new content and/or attachments.
+Updates existing Confluence pages with new content and/or attachments, ensuring macros remain active.
 
 ### Basic Syntax
 
@@ -220,18 +213,16 @@ confluence_cli update page \
 *   **Example:** `--body-value "This is my page content"`
 
 #### `--body-value-from-file {file path}`
-
-*   **Description:** Specifies the file path that contains the content for the page body
-*   **Usage:** Replace `{file path}` with the actual path to the content file
-*   **Required:** No (optional)
-*   **Example:** `--body-value-from-file "/path/to/content.html"`
+- **Description:** Specifies the file path that contains the content for the page body
+- **Usage:** Replace `{file path}` with the actual path to the content file
+- **Required:** No (optional)
+- **Example:** `--body-value-from-file "/path/to/updated-content.txt"`
 
 #### `--file {attachment file path}`
-
-*   **Description:** Path to the file to upload as attachment
-*   **Usage:** Replace `{attachment file path}` with the actual path to the file
-*   **Required:** No (optional)
-*   **Example:** `--file "/home/user/documents/report.pdf"`
+- **Description:** Path to the file to upload as attachment
+- **Usage:** Replace `{attachment file path}` with the actual path to the file
+- **Required:** No (optional)
+- **Example:** `--file "/path/to/new-attachment.pdf"`
 
 ## Complete Usage Examples
 
@@ -245,6 +236,7 @@ confluence_cli update page \
   --parent-page-id "123456" \
   --title "Test Page"
 ```
+**Result:** Page created with automatic action list macro and attachment macro
 
 #### 2\. Create page with direct content
 
@@ -255,6 +247,7 @@ confluence_cli update page \
   --title "Test Page" \
   --body-value "This is the page content"
 ```
+**Result:** Page created with content, automatic action list macro, and attachment macro
 
 #### 3\. Create page with content from file
 
@@ -265,6 +258,7 @@ confluence_cli update page \
   --title "Test Page" \
   --body-value-from-file "/path/to/content.txt"
 ```
+**Result:** Page created with file content, automatic action list macro, and attachment macro
 
 #### 4\. Create page with content and attachment
 
@@ -276,8 +270,7 @@ confluence_cli update page \
   --body-value "Content here" \
   --file "/path/to/attachment.txt"
 ```
-
-**Note:** File will be automatically embedded and displayed on the page.
+**Result:** Page created with content, file attachment (embedded), action list macro, and attachment macro
 
 #### 5\. Create page with content from file and attachment
 
@@ -289,8 +282,7 @@ confluence_cli update page \
   --body-value-from-file "/path/to/content.html" \
   --file "/path/to/attachment.pdf"
 ```
-
-**Note:** File will be automatically embedded and displayed on the page.
+**Result:** Page created with HTML content, PDF attachment (embedded), action list macro, and attachment macro
 
 ### Update Page Examples
 
@@ -301,6 +293,7 @@ confluence_cli update page \
   --page-id "123456" \
   --body-value "Updated content"
 ```
+**Result:** Page updated with new content, macros remain active
 
 #### 2\. Update page with content from file
 
@@ -309,6 +302,7 @@ confluence_cli update page \
   --page-id "4118873955" \
   --body-value-from-file "/path/to/updated-content.txt"
 ```
+**Result:** Page updated with file content, macros remain active
 
 #### 3\. Update page with content and upload attachment
 
@@ -318,8 +312,7 @@ confluence_cli update page \
   --body-value "Updated content" \
   --file "/path/to/new-attachment.pdf"
 ```
-
-**Note:** File will be automatically embedded and displayed on the page.
+**Result:** Page updated with content, new attachment (embedded), macros remain active
 
 #### 4\. Update page with content from file and upload attachment
 
@@ -329,8 +322,7 @@ confluence_cli update page \
   --body-value-from-file "/path/to/report.html" \
   --file "/path/to/report.html"
 ```
-
-**Note:** File will be automatically embedded and displayed on the page.
+**Result:** Page updated with HTML content, file attachment (embedded), macros remain active
 
 ### Upload Attachment Examples
 
@@ -341,8 +333,6 @@ confluence_cli update page \
   --page-id "123456" \
   --file "/path/to/document.pdf"
 ```
-
-**Note:** File will be uploaded as attachment but not embedded in the page content.
 
 ## API Reference
 
@@ -355,3 +345,36 @@ This tool uses the following Confluence REST APIs:
 | **Get Page** | `GET` | `/wiki/api/v2/pages/{pageId}` | Retrieves page details |
 | **Upload Attachment** | `POST` | `/wiki/rest/api/content/{pageId}/child/attachment` | Uploads files as attachments |
 | **Get Pages by Title** | `GET` | `/wiki/api/v2/pages?title={title}` | Searches pages by title |
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Macros not visible after manual edit**
+   - The CLI automatically detects and re-adds missing macros
+   - Check logs for "Page has been manually edited, re-adding macros..." message
+
+2. **Version conflicts**
+   - The CLI handles version conflicts automatically
+   - If you see "Version conflict detected" message, the CLI will retry
+
+### Log Messages
+
+- `"Adding attachment macro to ensure it's enabled"` - Attachment macro is being added
+- `"Macros enabled successfully"` - All macros have been successfully added
+- `"Page has been manually edited, re-adding macros..."` - Macros are being re-added after manual edit
+
+## Notes and Best Practices
+
+1. **Always use absolute paths** for file parameters to avoid path resolution issues
+2. **Macros are automatically managed** - no need to manually add or remove them
+3. **Test results are automatically parsed** from HTML content to determine action list status
+4. **Version handling is automatic** - the CLI manages page versions transparently
+
+## Support
+
+For issues or questions:
+1. Check the logs for detailed error messages
+2. Ensure all required environment variables are set
+3. Verify file paths are correct and accessible
+4. Check Confluence API permissions for your account

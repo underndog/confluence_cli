@@ -83,7 +83,7 @@ go test -v -run TestGetEnvOrDefault ./helper/
 
 ### 13. Test JSON marshaling
 ```bash
-go test -v -run TestPage_JSONMarshal ./model/
+go test -v -run TestPage_JSONMarshal ./model/req
 ```
 
 ## 📝 Notes
