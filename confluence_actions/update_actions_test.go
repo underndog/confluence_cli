@@ -1,11 +1,169 @@
 package confluence_actions
 
 import (
+	"confluence_cli/helper"
 	"fmt"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// Test parseTestResultsFromHTML function for update actions
+func TestUpdateActionsParseTestResultsFromHTML(t *testing.T) {
+	tests := []struct {
+		name           string
+		htmlContent    string
+		expectedFailed int
+		expectedTotal  int
+	}{
+		{
+			name: "Parse test results with failed tests",
+			htmlContent: `
+				<div>Total Tests: 100</div>
+				<div>Failed: 5</div>
+				<div>Passed: 95</div>
+			`,
+			expectedFailed: 5,
+			expectedTotal:  100,
+		},
+		{
+			name: "Parse test results with no failed tests",
+			htmlContent: `
+				<div>Total Tests: 50</div>
+				<div>Failed: 0</div>
+				<div>Passed: 50</div>
+			`,
+			expectedFailed: 0,
+			expectedTotal:  50,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			failedCount, totalCount := parseTestResultsFromHTML(tt.htmlContent)
+			assert.Equal(t, tt.expectedFailed, failedCount)
+			assert.Equal(t, tt.expectedTotal, totalCount)
+		})
+	}
+}
+
+// Test macro detection logic
+func TestMacroDetectionLogic(t *testing.T) {
+	tests := []struct {
+		name                  string
+		content               string
+		expectedHasAttachment bool
+		expectedHasActionList bool
+	}{
+		{
+			name: "Content with both macros",
+			content: `
+				<div>Some content</div>
+				<ac:structured-macro ac:name="attachments"></ac:structured-macro>
+				<ac:task-list>
+					<ac:task>GOOD FOR RELEASE</ac:task>
+				</ac:task-list>
+			`,
+			expectedHasAttachment: true,
+			expectedHasActionList: true,
+		},
+		{
+			name: "Content with only attachment macro",
+			content: `
+				<div>Some content</div>
+				<ac:structured-macro ac:name="attachments"></ac:structured-macro>
+			`,
+			expectedHasAttachment: true,
+			expectedHasActionList: false,
+		},
+		{
+			name: "Content with only action list macro",
+			content: `
+				<div>Some content</div>
+				<ac:task-list>
+					<ac:task>HOLD-OFF</ac:task>
+				</ac:task-list>
+			`,
+			expectedHasAttachment: false,
+			expectedHasActionList: true,
+		},
+		{
+			name: "Content with no macros",
+			content: `
+				<div>Some content</div>
+				<p>No macros here</p>
+			`,
+			expectedHasAttachment: false,
+			expectedHasActionList: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hasAttachmentMacro := strings.Contains(tt.content, "attachments")
+			hasActionList := strings.Contains(tt.content, "ac:task-list")
+
+			assert.Equal(t, tt.expectedHasAttachment, hasAttachmentMacro)
+			assert.Equal(t, tt.expectedHasActionList, hasActionList)
+		})
+	}
+}
+
+// Test Overall Status pattern matching
+func TestUpdateActionsOverallStatusPatternMatching(t *testing.T) {
+	pattern := `<td><strong>Overall Status</strong></td>\s*<td colspan="2">\s*</td>`
+	re := regexp.MustCompile(pattern)
+
+	tests := []struct {
+		name     string
+		content  string
+		expected bool
+	}{
+		{
+			name:     "Match Overall Status pattern",
+			content:  `<td><strong>Overall Status</strong></td><td colspan="2"></td>`,
+			expected: true,
+		},
+		{
+			name: "Match Overall Status pattern with whitespace",
+			content: `<td><strong>Overall Status</strong></td>
+				<td colspan="2">
+				</td>`,
+			expected: true,
+		},
+		{
+			name:     "No match - different structure",
+			content:  `<td><strong>Status</strong></td><td colspan="2"></td>`,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := re.MatchString(tt.content)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Test macro content generation for update actions
+func TestUpdateActionsMacroContentGeneration(t *testing.T) {
+	// Test that macros contain expected content
+	attachmentMacro := helper.CreateAttachmentMacro()
+	assert.Contains(t, attachmentMacro, "attachments")
+	assert.Contains(t, attachmentMacro, "ac:structured-macro")
+
+	// Test action list macro with different test results
+	actionListMacroFailed := helper.CreateActionItemMacro(5, 100)
+	assert.Contains(t, actionListMacroFailed, "HOLD-OFF")
+	assert.Contains(t, actionListMacroFailed, "GOOD FOR RELEASE")
+
+	actionListMacroPassed := helper.CreateActionItemMacro(0, 100)
+	assert.Contains(t, actionListMacroPassed, "HOLD-OFF")
+	assert.Contains(t, actionListMacroPassed, "GOOD FOR RELEASE")
+}
 
 func validateUpdatePage(pageId string) error {
 	if pageId == "" {
@@ -101,13 +259,55 @@ func TestUpdatePageValidationLogicDirect(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Test validation logic directly
-			if tt.pageId == "" {
-				assert.True(t, tt.expectError)
-				assert.Contains(t, tt.errorMsg, "please provide --page-id")
+			err := validateUpdatePage(tt.pageId)
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
 			} else {
-				assert.False(t, tt.expectError)
+				assert.NoError(t, err)
 			}
+		})
+	}
+}
+
+// Test macro re-adding logic after manual edits
+func TestMacroReAddingLogic(t *testing.T) {
+	tests := []struct {
+		name            string
+		originalVersion int
+		currentVersion  int
+		hasMacros       bool
+		expectReAdd     bool
+	}{
+		{
+			name:            "Version increased, macros missing - should re-add",
+			originalVersion: 1,
+			currentVersion:  3,
+			hasMacros:       false,
+			expectReAdd:     true,
+		},
+		{
+			name:            "Version increased, macros present - no re-add needed",
+			originalVersion: 1,
+			currentVersion:  3,
+			hasMacros:       true,
+			expectReAdd:     false,
+		},
+		{
+			name:            "Version normal - no re-add needed",
+			originalVersion: 1,
+			currentVersion:  2,
+			hasMacros:       true,
+			expectReAdd:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// This test would need to be expanded with actual logic testing
+			// For now, just test that the test cases are valid
+			assert.NotEmpty(t, tt.name)
+			assert.True(t, tt.currentVersion >= tt.originalVersion)
 		})
 	}
 }

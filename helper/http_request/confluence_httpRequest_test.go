@@ -2,8 +2,12 @@ package http_request
 
 import (
 	"confluence_cli/log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func setupTestEnvironment(t *testing.T) func() {
@@ -36,16 +40,23 @@ func TestCreateConfluencePage(t *testing.T) {
 }
 
 func TestGetConfluencePagesByTitle(t *testing.T) {
-	cleanup := setupTestEnvironment(t)
-	defer cleanup()
+	// Mock HTTP server for testing
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"results": []}`))
+	}))
+	defer server.Close()
 
+	// Set environment variable to point to mock server
+	originalURL := os.Getenv("CONFLUENCE_URL")
+	os.Setenv("CONFLUENCE_URL", server.URL)
+	defer os.Setenv("CONFLUENCE_URL", originalURL)
+
+	// Now test with mock server
 	resp, err := GetConfluencePagesByTitle("TestTitle")
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
-	if resp == nil {
-		t.Error("expected response, got nil")
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
 }
 
 // Test environment setup without HTTP calls
