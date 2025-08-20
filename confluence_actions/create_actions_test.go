@@ -5,6 +5,8 @@ import (
 	"confluence_cli/log"
 	"flag"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -223,29 +225,34 @@ func TestValidationLogicWithMock(t *testing.T) {
 }
 
 // Test file parameter handling
-func TestFileParameterHandling(t *testing.T) {
-	tests := []struct {
-		name        string
-		filePath    string
-		expectError bool
-	}{
-		{
-			name:        "Empty file path",
-			filePath:    "",
-			expectError: false,
-		},
-		{
-			name:        "Valid file path",
-			filePath:    "/path/to/file.txt",
-			expectError: false,
-		},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// This test would need to be expanded with actual file validation
-			// For now, just test that the parameter is handled
-			assert.NotEmpty(t, tt.name)
+func TestFileParameterHandling(t *testing.T) {
+	t.Run("Empty file path", func(t *testing.T) {
+		app := cli.NewApp()
+		set := flagSet([]string{
+			"space-id", "SPACE",
+			"parent-page-id", "123",
+			"title", "Test",
+			"file", "",
 		})
-	}
+		c := cli.NewContext(app, set, nil)
+		assert.Equal(t, "", c.String("file"))
+	})
+
+	t.Run("Valid file path", func(t *testing.T) {
+		dir := t.TempDir()
+		fp := filepath.Join(dir, "body.html")
+		err := os.WriteFile(fp, []byte("<html>ok</html>"), 0o644)
+		assert.NoError(t, err)
+
+		app := cli.NewApp()
+		set := flagSet([]string{
+			"space-id", "SPACE",
+			"parent-page-id", "123",
+			"title", "Test",
+			"file", fp,
+		})
+		c := cli.NewContext(app, set, nil)
+		assert.Equal(t, fp, c.String("file"))
+	})
 }
