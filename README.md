@@ -20,16 +20,11 @@ The `confluence_cli` is a powerful command-line tool designed for seamless inter
 
 **NEW FEATURES**:
 
-1. **Automatic Action List Macro**: When creating or updating pages, the CLI automatically adds an "Overall Status" action list with:
-   - "GOOD FOR RELEASE" (Green status macro)
-   - "HOLD-OFF" (Red status macro)
-   - Status is automatically determined based on test results (failed tests > 0 = HOLD-OFF checked)
-
-2. **Enhanced Attachment Macro**: File attachments are automatically embedded and displayed on the page
-
-3. **Smart Macro Management**: Macros are automatically re-added if they get lost during manual page edits
-
-4. **Test Result Parsing**: Automatically parses HTML content to determine test status and set appropriate action list status
+1. **Attachment Macro Management**: Automatically enables attachment macros when files are uploaded
+2. **Smart Macro Detection**: Detects missing attachment macros and action list macros and re-enables them automatically
+3. **Page Version Management**: Handles page versions correctly during updates
+4. **File Upload Integration**: Seamlessly uploads and embeds file attachments
+5. **Helper Function System**: Comprehensive helper functions for macro creation and management
 
 ## Quick Start
 
@@ -85,16 +80,6 @@ docker run -it --rm \
 --name confluence-cli quay.io/underndog/confluence_cli:latest create page --space-id "<space_id>" --parent-page-id "<parent_page_id>" --title "<Tile of Page>" --body-value <content>
 ```
 
-Example:
-
-```plaintext
-docker run -it --rm \
--e API_TOKEN="ATATT3xFfGF02YUScHu9GuuqycnLcSzwhorVf3sYwEwwAEG08c5LYGRg7ltuZmPnYUvoRhkkM1-bM4HpT9g9oNjOfv37P8jdOM0HfuSmsSwwd-8IEabKemAH0gattqzH7dt-6o-nP_vpAvN1aQI=77E0A659" \
--e CONFLUENCE_URL='https://opswat.atlassian.net' \
--e EMAIL="devops.nim@nimtechnology.com" \
---name confluence-cli quay.io/underndog/confluence_cli:latest create page --space-id "2703951026" --parent-page-id "4114481660" --title "Test report 11" --body-value test
-```
-
 ## Commands Overview
 
 The tool provides three main commands:
@@ -102,27 +87,6 @@ The tool provides three main commands:
 1. **`create page`** - Create new Confluence pages with optional content, attachments, and automatic macro embedding
 2. **`update page`** - Update existing pages with new content and/or attachments, ensuring macros remain active
 3. **`upload attachment`** - Upload attachments to existing pages without changing the page content
-
-## Automatic Macro Features
-
-### Action List Macro
-The CLI automatically adds an "Overall Status" action list to every page with:
-- **GOOD FOR RELEASE**: Green status indicator (checked when all tests pass)
-- **HOLD-OFF**: Red status indicator (checked when any tests fail)
-
-**Status Logic**:
-- If `failedCount > 0`: HOLD-OFF is checked, GOOD FOR RELEASE is unchecked
-- If `failedCount = 0`: GOOD FOR RELEASE is checked, HOLD-OFF is unchecked
-
-### Attachment Macro
-- Automatically added to every page
-- Ensures file attachments are properly displayed
-- Re-added automatically if lost during manual edits
-
-### Smart Macro Management
-- Detects when macros are missing after manual page edits
-- Automatically re-adds macros with correct version handling
-- Prevents version conflicts during updates
 
 ## Create Page Command
 
@@ -394,14 +358,8 @@ This tool uses the following Confluence REST APIs:
    - The CLI handles version conflicts automatically
    - If you see "Version conflict detected" message, the CLI will retry
 
-3. **Action list status incorrect**
-   - Status is automatically determined by parsing test results
-   - Failed tests > 0 = HOLD-OFF checked
-   - All tests passed = GOOD FOR RELEASE checked
-
 ### Log Messages
 
-- `"Adding action list macro to Overall Status"` - Action list macro is being added
 - `"Adding attachment macro to ensure it's enabled"` - Attachment macro is being added
 - `"Macros enabled successfully"` - All macros have been successfully added
 - `"Page has been manually edited, re-adding macros..."` - Macros are being re-added after manual edit
@@ -412,7 +370,6 @@ This tool uses the following Confluence REST APIs:
 2. **Macros are automatically managed** - no need to manually add or remove them
 3. **Test results are automatically parsed** from HTML content to determine action list status
 4. **Version handling is automatic** - the CLI manages page versions transparently
-5. **Manual edits are detected** and macros are automatically restored
 
 ## Support
 
