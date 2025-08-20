@@ -150,19 +150,14 @@ func TestUpdateActionsOverallStatusPatternMatching(t *testing.T) {
 
 // Test macro content generation for update actions
 func TestUpdateActionsMacroContentGeneration(t *testing.T) {
-	// Test that macros contain expected content
+	// Test that attachment macro contains expected content
 	attachmentMacro := helper.CreateAttachmentMacro()
 	assert.Contains(t, attachmentMacro, "attachments")
 	assert.Contains(t, attachmentMacro, "ac:structured-macro")
 
-	// Test action list macro with different test results
-	actionListMacroFailed := helper.CreateActionItemMacro(5, 100)
-	assert.Contains(t, actionListMacroFailed, "HOLD-OFF")
-	assert.Contains(t, actionListMacroFailed, "GOOD FOR RELEASE")
-
-	actionListMacroPassed := helper.CreateActionItemMacro(0, 100)
-	assert.Contains(t, actionListMacroPassed, "HOLD-OFF")
-	assert.Contains(t, actionListMacroPassed, "GOOD FOR RELEASE")
+	// Test that attachment macro is properly wrapped
+	assert.True(t, strings.HasPrefix(attachmentMacro, "<p>"))
+	assert.True(t, strings.HasSuffix(attachmentMacro, "</p>"))
 }
 
 func validateUpdatePage(pageId string) error {

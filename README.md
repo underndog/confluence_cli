@@ -1,4 +1,4 @@
-## Confluence CLI - Complete Command Reference
+# Confluence CLI - Complete Command Reference
 
 The `confluence_cli` is a powerful command-line tool designed for seamless interaction with Confluence's API. It provides comprehensive functionality for creating pages, updating content, managing attachments, and automatically embedding macros including attachment macros and action list macros.
 

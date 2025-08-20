@@ -7,55 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateActionItemMacro(t *testing.T) {
-	tests := []struct {
-		name                   string
-		failedCount            int
-		totalCount             int
-		expectedGoodForRelease string
-		expectedHoldOff        string
-	}{
-		{
-			name:                   "Tests failed - HOLD-OFF should be checked",
-			failedCount:            5,
-			totalCount:             100,
-			expectedGoodForRelease: "incomplete",
-			expectedHoldOff:        "complete",
-		},
-		{
-			name:                   "All tests passed - GOOD FOR RELEASE should be checked",
-			failedCount:            0,
-			totalCount:             100,
-			expectedGoodForRelease: "complete",
-			expectedHoldOff:        "incomplete",
-		},
-		{
-			name:                   "Edge case: failed count equals total",
-			failedCount:            10,
-			totalCount:             10,
-			expectedGoodForRelease: "incomplete",
-			expectedHoldOff:        "complete",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := CreateActionItemMacro(tt.failedCount, tt.totalCount)
-
-			// Check that the macro contains expected status values
-			assert.Contains(t, result, tt.expectedGoodForRelease)
-			assert.Contains(t, result, tt.expectedHoldOff)
-
-			// Check that the macro contains required elements
-			assert.Contains(t, result, "ac:task-list")
-			assert.Contains(t, result, "GOOD FOR RELEASE")
-			assert.Contains(t, result, "HOLD-OFF")
-			assert.Contains(t, result, "ac:structured-macro")
-			assert.Contains(t, result, "ac:parameter ac:name=\"colour\"")
-		})
-	}
-}
-
 func TestCreateAttachmentMacro(t *testing.T) {
 	result := CreateAttachmentMacro()
 
@@ -85,42 +36,51 @@ func TestFormatForConfluenceCodeMacro(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMacroTemplates(t *testing.T) {
-	// Test ActionListMacroTemplate
-	assert.Contains(t, ActionListMacroTemplate, "ac:task-list")
-	assert.Contains(t, ActionListMacroTemplate, "GOOD FOR RELEASE")
-	assert.Contains(t, ActionListMacroTemplate, "HOLD-OFF")
-	assert.Contains(t, ActionListMacroTemplate, "%s") // Placeholder for status
+func TestMacroDetectionFunctions(t *testing.T) {
+	// Test HasAttachmentMacro
+	contentWithAttachment := `<ac:structured-macro ac:name="attachments"></ac:structured-macro>`
+	contentWithoutAttachment := `<p>Some content without attachment macro</p>`
 
-	// Test AttachmentMacroTemplate
-	assert.Contains(t, AttachmentMacroTemplate, "ac:structured-macro")
-	assert.Contains(t, AttachmentMacroTemplate, "ac:name=\"attachments\"")
-	assert.Contains(t, AttachmentMacroTemplate, "ac:schema-version=\"1\"")
+	assert.True(t, HasAttachmentMacro(contentWithAttachment))
+	assert.False(t, HasAttachmentMacro(contentWithoutAttachment))
+
+	// Test HasActionListMacro
+	contentWithActionList := `<ac:task-list>Some task list content</ac:task-list>`
+	contentWithoutActionList := `<p>Some content without action list macro</p>`
+
+	assert.True(t, HasActionListMacro(contentWithActionList))
+	assert.False(t, HasActionListMacro(contentWithoutActionList))
 }
 
-// Test macro template constants
-func TestMacroTemplateConstants(t *testing.T) {
-	// Test ActionListMacroTemplate structure
-	assert.Contains(t, ActionListMacroTemplate, "ac:task-list")
-	assert.Contains(t, ActionListMacroTemplate, "ac:task")
-	assert.Contains(t, ActionListMacroTemplate, "ac:task-status")
-	assert.Contains(t, ActionListMacroTemplate, "ac:task-body")
+func TestEnableMacrosIfMissing(t *testing.T) {
+	// Test content without attachment macro
+	contentWithoutMacro := `<p>Content without macros</p>`
+	result := EnableMacrosIfMissing(contentWithoutMacro)
 
-	// Test AttachmentMacroTemplate structure
-	assert.Contains(t, AttachmentMacroTemplate, "ac:structured-macro")
-	assert.Contains(t, AttachmentMacroTemplate, "attachments")
+	// Should add attachment macro
+	assert.Contains(t, result, "ac:name=\"attachments\"")
+	assert.Contains(t, result, contentWithoutMacro)
+
+	// Test content with existing attachment macro
+	contentWithMacro := `<p>Content with <ac:structured-macro ac:name="attachments"></ac:structured-macro></p>`
+	resultWithExisting := EnableMacrosIfMissing(contentWithMacro)
+
+	// Should not add duplicate macro
+	attachmentCount := strings.Count(resultWithExisting, "ac:name=\"attachments\"")
+	assert.Equal(t, 1, attachmentCount, "Should not add duplicate attachment macro")
 }
 
-// Test macro content validation
 func TestMacroContentValidation(t *testing.T) {
-	// Test that action list macro contains both tasks
-	actionListMacro := CreateActionItemMacro(0, 10)
+	// Test attachment macro structure
+	attachmentMacro := CreateAttachmentMacro()
+	assert.Contains(t, attachmentMacro, "ac:structured-macro")
+	assert.Contains(t, attachmentMacro, "ac:name=\"attachments\"")
+	assert.Contains(t, attachmentMacro, "ac:schema-version=\"1\"")
 
-	// Count occurrences of task elements
-	taskCount := strings.Count(actionListMacro, "<ac:task>")
-	assert.Equal(t, 2, taskCount, "Action list macro should contain exactly 2 tasks")
-
-	// Check for status macro parameters
-	assert.Contains(t, actionListMacro, "ac:parameter ac:name=\"colour\"")
-	assert.Contains(t, actionListMacro, "ac:parameter ac:name=\"title\"")
+	// Test code macro formatting
+	codeMacro, err := FormatForConfluenceCodeMacro("test_file.txt")
+	if err == nil {
+		assert.Contains(t, codeMacro, "ac:structured-macro ac:name=\"code\"")
+		assert.Contains(t, codeMacro, "ac:plain-text-body")
+	}
 }

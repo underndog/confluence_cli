@@ -92,6 +92,9 @@ func CreatePageAction(c *cli.Context) error {
 	}
 	// If neither is provided, contentPage remains empty string
 
+	// Log content trước khi tạo page
+	log.Info("Content length:", len(contentPage))
+
 	// Create the page
 	log.Info("Creating page...")
 	resp, err := http_request.CreateConfluencePage(spaceId, parentPageId, fmt.Sprintf("[%s] %s", formattedDate, title), contentPage)
@@ -103,6 +106,7 @@ func CreatePageAction(c *cli.Context) error {
 		var errResponse req.ErrorResponse
 		if err := json.Unmarshal(resp.Body(), &errResponse); err == nil && len(errResponse.Errors) > 0 {
 			if errResponse.Errors[0].Title == "A page with this title already exists: A page already exists with the same TITLE in this space" {
+				log.Info("Page with title already exists, getting existing page ID...")
 				respPages, err := http_request.GetConfluencePagesByTitle(fmt.Sprintf("[%s] %s", formattedDate, title))
 				if err != nil {
 					return err
@@ -110,6 +114,7 @@ func CreatePageAction(c *cli.Context) error {
 				var pagesInfo req.PagesInfo
 				if err = json.Unmarshal(respPages.Body(), &pagesInfo); err == nil && len(pagesInfo.Results) > 0 {
 					nextParentID = pagesInfo.Results[0].ID
+					log.Info("Found existing page with ID:", nextParentID)
 				}
 			}
 		}
@@ -117,6 +122,7 @@ func CreatePageAction(c *cli.Context) error {
 		var createdResultPage req.CreatePageResult
 		if err := json.Unmarshal(resp.Body(), &createdResultPage); err == nil {
 			nextParentID = createdResultPage.ID
+			log.Info("Created parent page with ID:", nextParentID)
 		}
 	}
 	if nextParentID == "" {
@@ -144,7 +150,7 @@ func CreatePageAction(c *cli.Context) error {
 
 		// Construct full URL
 		fullURL := baseURL + "wiki" + childPageResult.Links.Webui
-		log.Info("Full URL of the page created: ", fullURL)
+		log.Info("Page URL:", fullURL)
 	} else {
 		// Fallback if webui link is not available
 		log.Info("Page created with ID:", createdPageId)
@@ -153,10 +159,13 @@ func CreatePageAction(c *cli.Context) error {
 
 	filePath := c.String("file")
 	if filePath != "" {
+		log.Info("Processing file upload for page ID:", createdPageId)
+
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			return fmt.Errorf("attachment file does not exist: %s", filePath)
 		}
 
+		log.Info("File exists, starting upload...")
 		uploadResp, err := http_request.UploadConfluenceAttachment(createdPageId, filePath)
 		if err != nil {
 			return err
@@ -168,7 +177,7 @@ func CreatePageAction(c *cli.Context) error {
 			// Enable macro by default when file is uploaded, unless explicitly disabled
 			shouldEmbed := true // Always enable macro when file is present
 			if shouldEmbed {
-				log.Info("Embedding attached file and Action Items into page content...")
+				log.Info("Ensuring attachment macro is enabled...")
 
 				resp, err := http_request.GetConfluencePageByID(createdPageId + "?body-format=storage")
 				if err != nil {
@@ -179,110 +188,79 @@ func CreatePageAction(c *cli.Context) error {
 					return err
 				}
 
-				// Parse test results to determine status
-				failedCount, totalCount := parseTestResultsFromHTML(contentPage)
-
 				// Add file attachment macro
 				attachmentMacro := helper.CreateAttachmentMacro()
 
-				// Add action list macro cho Overall Status with dynamic status
-				actionListMacro := helper.CreateActionItemMacro(failedCount, totalCount)
+				// Action list macro will be set by generate_report.py
+				// confluence_cli only enables attachment macro
 
 				// Find and replace placeholder in Overall Status row
 				currentBody := currentPage.Body.Storage.Value
 
-				// Pattern to find Overall Status row
-				overallStatusPattern := `<td><strong>Overall Status</strong></td>\s*<td colspan="2">\s*</td>`
+				// Check macro status for debugging
+				hasAttachmentMacro := helper.HasAttachmentMacro(currentBody)
+				hasActionListMacro := helper.HasActionListMacro(currentBody)
+				log.Info("Macro status check - Attachment:", hasAttachmentMacro, "Action List:", hasActionListMacro)
+
+				// Pattern to find Overall Status row - support td with content
+				// Match td có content bên trong, không cần closing tag
+				overallStatusPattern := `<td><strong>Overall Status</strong></td>\s*<td colspan=['"]2['"]>`
 
 				re := regexp.MustCompile(overallStatusPattern)
 
-				// Helper function để tạo payload và update page
-				updatePageWithMacros := func(newBody string, message string) error {
+				if re.MatchString(currentBody) {
+					log.Info("Overall Status pattern matched - adding attachment macro")
+
+					// Chỉ thêm attachment macro vào cuối, không thay thế Overall Status
+					newBody := currentPage.Body.Storage.Value + attachmentMacro
+
+					// Update page với newBody
 					payload := req.UpdatePagePayload{
 						ID:      createdPageId,
 						Status:  "current",
 						Title:   currentPage.Title,
 						Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
-						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: message},
+						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Added attachment macro"},
 					}
 
+					log.Info("Updating page with new version:", currentPage.Version.Number+1)
 					embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
 					if err != nil || embedResp.StatusCode() >= 300 {
-						return fmt.Errorf("embedding attachment and Action Items failed")
+						return fmt.Errorf("adding attachment macro failed")
 					}
-					log.Info("File embedded and Action Items added successfully into page.")
+					log.Info("Attachment macro enabled successfully")
 					return nil
-				}
-
-				// Create replacement string for Overall Status
-				replacement := fmt.Sprintf(`<td><strong>Overall Status</strong></td>
-					<td colspan="2">
-						%s
-					</td>`, actionListMacro)
-
-				if re.MatchString(currentBody) {
-					log.Info("Adding action list macro to Overall Status")
-					newBody := re.ReplaceAllString(currentBody, replacement)
-					newBody += attachmentMacro
-
-					log.Info("Adding file attachment macro to page content...")
-					log.Info("Current page version:", currentPage.Version.Number)
-					log.Info("New page version will be:", currentPage.Version.Number+1)
-
-					if err := updatePageWithMacros(newBody, "Embedded attached file and Action Items via CLI"); err != nil {
-						return err
-					}
 				} else {
-					log.Info("Pattern NOT matched - using fallback method")
-					newBody := currentPage.Body.Storage.Value + attachmentMacro + actionListMacro
+					log.Info("Overall Status pattern not matched - adding attachment macro to end")
 
-					log.Info("Adding file attachment macro to page content...")
-					log.Info("Current page version:", currentPage.Version.Number)
-					log.Info("New page version will be:", currentPage.Version.Number+1)
+					// Fallback: thêm attachment macro vào cuối
+					newBody := currentPage.Body.Storage.Value + attachmentMacro
 
-					if err := updatePageWithMacros(newBody, "Embedded attached file and Action Items via CLI"); err != nil {
-						return err
+					// Update page với newBody
+					payload := req.UpdatePagePayload{
+						ID:      createdPageId,
+						Status:  "current",
+						Title:   currentPage.Title,
+						Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
+						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Added attachment macro via fallback"},
 					}
-				}
 
-				// After successful update, check if page needs additional update
-				log.Info("Checking if page needs additional update...")
-
-				// Get latest page info and re-update if needed
-				if latestResp, err := http_request.GetConfluencePageByID(createdPageId + "?body-format=storage"); err == nil {
-					var latestPage req.CreatePageResult
-					if err := json.Unmarshal(latestResp.Body(), &latestPage); err == nil {
-						log.Info("Latest page version after update:", latestPage.Version.Number)
-
-						// If version > 2, page may have been edited, need to update again
-						if latestPage.Version.Number > 2 {
-							log.Info("Page has been edited, updating content again...")
-
-							reupdateBody := latestPage.Body.Storage.Value + attachmentMacro + actionListMacro
-							payload := req.UpdatePagePayload{
-								ID:      createdPageId,
-								Status:  "current",
-								Title:   latestPage.Title,
-								Body:    req.UpdatePageBody{Representation: "storage", Value: reupdateBody},
-								Version: req.UpdatePageVersion{Number: latestPage.Version.Number + 1, Message: "Re-embedded macros after page edit"},
-							}
-
-							if reupdateResp, err := http_request.UpdateConfluencePage(createdPageId, payload); err != nil || reupdateResp.StatusCode() >= 300 {
-								log.Warn("Failed to re-update page content")
-							} else {
-								log.Info("Page content re-updated successfully")
-							}
-						}
+					log.Info("Updating page with new version:", currentPage.Version.Number+1)
+					embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
+					if err != nil || embedResp.StatusCode() >= 300 {
+						return fmt.Errorf("adding attachment macro failed")
 					}
-				} else {
-					log.Warn("Could not get latest page info for version check")
+					log.Info("Attachment macro enabled successfully via fallback")
+					return nil
 				}
 			}
 		} else {
 			return fmt.Errorf("upload failed with status: %s", uploadResp.Status())
 		}
+	} else {
+		log.Info("No file attachment specified, but page creation completed successfully")
 	}
 
-	log.Info("All operations completed successfully.")
+	log.Info("Page creation completed successfully")
 	return nil
 }

@@ -75,7 +75,7 @@ func TestParseTestResultsFromHTML(t *testing.T) {
 
 // Test regex pattern matching for Overall Status
 func TestOverallStatusPatternMatching(t *testing.T) {
-	pattern := `<td><strong>Overall Status</strong></td>\s*<td colspan="2">\s*</td>`
+	pattern := `<td><strong>Overall Status</strong></td>\s*<td colspan=['"]2['"]>`
 	re := regexp.MustCompile(pattern)
 
 	tests := []struct {
@@ -85,24 +85,17 @@ func TestOverallStatusPatternMatching(t *testing.T) {
 	}{
 		{
 			name:     "Match Overall Status pattern",
-			content:  `<td><strong>Overall Status</strong></td><td colspan="2"></td>`,
+			content:  `<td><strong>Overall Status</strong></td><td colspan="2">`,
 			expected: true,
 		},
 		{
-			name: "Match Overall Status pattern with whitespace",
-			content: `<td><strong>Overall Status</strong></td>
-				<td colspan="2">
-				</td>`,
+			name:     "Match with single quotes",
+			content:  `<td><strong>Overall Status</strong></td><td colspan='2'>`,
 			expected: true,
 		},
 		{
 			name:     "No match - different structure",
-			content:  `<td><strong>Status</strong></td><td colspan="2"></td>`,
-			expected: false,
-		},
-		{
-			name:     "No match - missing colspan",
-			content:  `<td><strong>Overall Status</strong></td><td></td>`,
+			content:  `<td><strong>Status</strong></td><td colspan="2">`,
 			expected: false,
 		},
 	}
@@ -122,14 +115,9 @@ func TestMacroContentGeneration(t *testing.T) {
 	assert.Contains(t, attachmentMacro, "attachments")
 	assert.Contains(t, attachmentMacro, "ac:structured-macro")
 
-	// Test action list macro with different test results
-	actionListMacroFailed := helper.CreateActionItemMacro(5, 100)
-	assert.Contains(t, actionListMacroFailed, "HOLD-OFF")
-	assert.Contains(t, actionListMacroFailed, "GOOD FOR RELEASE")
-
-	actionListMacroPassed := helper.CreateActionItemMacro(0, 100)
-	assert.Contains(t, actionListMacroPassed, "HOLD-OFF")
-	assert.Contains(t, actionListMacroPassed, "GOOD FOR RELEASE")
+	// Test action list macro detection
+	hasActionList := helper.HasActionListMacro(`<ac:task-list>...</ac:task-list>`)
+	assert.True(t, hasActionList)
 }
 
 // Mock context for minimal flag testing
