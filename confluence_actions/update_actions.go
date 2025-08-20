@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 )
@@ -58,10 +59,12 @@ func UpdatePageAction(c *cli.Context) error {
 
 		// Add embed macro if file is present (always enabled)
 		if filePath != "" {
-			if contentPage != "" {
-				contentPage += "\n\n"
+			if !strings.Contains(contentPage, `ac:name="attachments"`) {
+				if contentPage != "" {
+					contentPage += "\n\n"
+				}
+				contentPage += helper.CreateAttachmentMacro()
 			}
-			contentPage += `<ac:structured-macro ac:name="attachments" ac:schema-version="1"></ac:structured-macro>`
 		}
 
 		// Update page with new content
