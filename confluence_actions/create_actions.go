@@ -1,16 +1,60 @@
 package confluence_actions
 
 import (
+	"confluence_cli/helper"
 	"confluence_cli/helper/http_request"
 	"confluence_cli/log"
 	"confluence_cli/model/req"
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/urfave/cli/v2"
 )
+
+// Parse test results from HTML content to determine Overall Status
+func parseTestResultsFromHTML(htmlContent string) (failedCount, totalCount int) {
+	// Default values
+	failedCount = 0
+	totalCount = 0
+
+	// Simple regex to find test counts
+	// Look for patterns like "Failed: 47" or "Total Tests: 438"
+	failedMatch := regexp.MustCompile(`Failed:\s*(\d+)`)
+	totalMatch := regexp.MustCompile(`Total Tests:\s*(\d+)`)
+
+	if failedMatches := failedMatch.FindStringSubmatch(htmlContent); len(failedMatches) > 1 {
+		fmt.Sscanf(failedMatches[1], "%d", &failedCount)
+		log.Info("Found failed count:", failedCount)
+	}
+
+	if totalMatches := totalMatch.FindStringSubmatch(htmlContent); len(totalMatches) > 1 {
+		fmt.Sscanf(totalMatches[1], "%d", &totalCount)
+		log.Info("Found total count:", totalCount)
+	}
+
+	// If no matches found, try alternative patterns
+	if failedCount == 0 && totalCount == 0 {
+		// Try to find in different format
+		failedMatch2 := regexp.MustCompile(`<strong>Failed:</strong>\s*(\d+)`)
+		totalMatch2 := regexp.MustCompile(`<strong>Total Tests:</strong>\s*(\d+)`)
+
+		if failedMatches := failedMatch2.FindStringSubmatch(htmlContent); len(failedMatches) > 1 {
+			fmt.Sscanf(failedMatches[1], "%d", &failedCount)
+			log.Info("Found failed count (alt):", failedCount)
+		}
+
+		if totalMatches := totalMatch2.FindStringSubmatch(htmlContent); len(totalMatches) > 1 {
+			fmt.Sscanf(totalMatches[1], "%d", &totalCount)
+			log.Info("Found total count (alt):", totalCount)
+		}
+	}
+
+	log.Info("Final parsed results - Failed:", failedCount, "Total:", totalCount)
+	return failedCount, totalCount
+}
 
 func CreatePageAction(c *cli.Context) error {
 	spaceId := c.String("space-id")
@@ -93,6 +137,20 @@ func CreatePageAction(c *cli.Context) error {
 	createdPageId := childPageResult.ID
 	log.Info("Successfully created content page with ID:", createdPageId)
 
+	// Create and log the full URL using the webui link from API response
+	if childPageResult.Links.Webui != "" {
+		// Get base URL from the same source as http_request functions
+		baseURL := helper.GetEnvOrDefault("CONFLUENCE_URL", "https://nimtechnology.atlassian.net")
+
+		// Construct full URL
+		fullURL := baseURL + "wiki" + childPageResult.Links.Webui
+		log.Info("Full URL of the page created: ", fullURL)
+	} else {
+		// Fallback if webui link is not available
+		log.Info("Page created with ID:", createdPageId)
+		log.Info("WebUI link not available in response")
+	}
+
 	filePath := c.String("file")
 	if filePath != "" {
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -110,7 +168,7 @@ func CreatePageAction(c *cli.Context) error {
 			// Enable macro by default when file is uploaded, unless explicitly disabled
 			shouldEmbed := true // Always enable macro when file is present
 			if shouldEmbed {
-				log.Info("Embedding attached file into page content...")
+				log.Info("Embedding attached file and Action Items into page content...")
 
 				resp, err := http_request.GetConfluencePageByID(createdPageId + "?body-format=storage")
 				if err != nil {
@@ -121,24 +179,104 @@ func CreatePageAction(c *cli.Context) error {
 					return err
 				}
 
-				macroXHTML := fmt.Sprintf(
-					`<p><ac:structured-macro ac:name="attachments" ac:schema-version="1"></ac:structured-macro></p>`,
-				)
-				newBody := currentPage.Body.Storage.Value + macroXHTML
+				// Parse test results to determine status
+				failedCount, totalCount := parseTestResultsFromHTML(contentPage)
 
-				payload := req.UpdatePagePayload{
-					ID:      createdPageId,
-					Status:  "current",
-					Title:   currentPage.Title,
-					Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
-					Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Embedded attached file via CLI"},
+				// Add file attachment macro
+				attachmentMacro := helper.CreateAttachmentMacro()
+
+				// Add action list macro cho Overall Status with dynamic status
+				actionListMacro := helper.CreateActionItemMacro(failedCount, totalCount)
+
+				// Find and replace placeholder in Overall Status row
+				currentBody := currentPage.Body.Storage.Value
+
+				// Pattern to find Overall Status row
+				overallStatusPattern := `<td><strong>Overall Status</strong></td>\s*<td colspan="2">\s*</td>`
+
+				re := regexp.MustCompile(overallStatusPattern)
+
+				// Helper function để tạo payload và update page
+				updatePageWithMacros := func(newBody string, message string) error {
+					payload := req.UpdatePagePayload{
+						ID:      createdPageId,
+						Status:  "current",
+						Title:   currentPage.Title,
+						Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
+						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: message},
+					}
+
+					embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
+					if err != nil || embedResp.StatusCode() >= 300 {
+						return fmt.Errorf("embedding attachment and Action Items failed")
+					}
+					log.Info("File embedded and Action Items added successfully into page.")
+					return nil
 				}
 
-				embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
-				if err != nil || embedResp.StatusCode() >= 300 {
-					return fmt.Errorf("embedding attachment failed")
+				// Create replacement string for Overall Status
+				replacement := fmt.Sprintf(`<td><strong>Overall Status</strong></td>
+					<td colspan="2">
+						%s
+					</td>`, actionListMacro)
+
+				if re.MatchString(currentBody) {
+					log.Info("Adding action list macro to Overall Status")
+					newBody := re.ReplaceAllString(currentBody, replacement)
+					newBody += attachmentMacro
+
+					log.Info("Adding file attachment macro to page content...")
+					log.Info("Current page version:", currentPage.Version.Number)
+					log.Info("New page version will be:", currentPage.Version.Number+1)
+
+					if err := updatePageWithMacros(newBody, "Embedded attached file and Action Items via CLI"); err != nil {
+						return err
+					}
+				} else {
+					log.Info("Pattern NOT matched - using fallback method")
+					newBody := currentPage.Body.Storage.Value + attachmentMacro + actionListMacro
+
+					log.Info("Adding file attachment macro to page content...")
+					log.Info("Current page version:", currentPage.Version.Number)
+					log.Info("New page version will be:", currentPage.Version.Number+1)
+
+					if err := updatePageWithMacros(newBody, "Embedded attached file and Action Items via CLI"); err != nil {
+						return err
+					}
 				}
-				log.Info("File embedded successfully into page.")
+
+				// After successful update, check if page needs additional update
+				log.Info("Checking if page needs additional update...")
+
+				// Get latest page info and re-update if needed
+				if latestResp, err := http_request.GetConfluencePageByID(createdPageId + "?body-format=storage"); err == nil {
+					var latestPage req.CreatePageResult
+					if err := json.Unmarshal(latestResp.Body(), &latestPage); err == nil {
+						log.Info("Latest page version after update:", latestPage.Version.Number)
+
+						// If version > 2, page may have been edited, need to update again
+						if latestPage.Version.Number > 2 {
+							log.Info("Page has been edited, updating content again...")
+
+							reupdateBody := latestPage.Body.Storage.Value + attachmentMacro + actionListMacro
+							payload := req.UpdatePagePayload{
+								ID:      createdPageId,
+								Status:  "current",
+								Title:   latestPage.Title,
+								Body:    req.UpdatePageBody{Representation: "storage", Value: reupdateBody},
+								Version: req.UpdatePageVersion{Number: latestPage.Version.Number + 1, Message: "Re-embedded macros after page edit"},
+							}
+
+							if reupdateResp, err := http_request.UpdateConfluencePage(createdPageId, payload); err != nil || reupdateResp.StatusCode() >= 300 {
+								log.Warn("Failed to re-update page content")
+							} else {
+								log.Info("Page content re-updated successfully")
+							}
+						}
+					}
+				} else {
+					log.Warn("Could not get latest page info for version check")
+				}
 			}
 		} else {
 			return fmt.Errorf("upload failed with status: %s", uploadResp.Status())

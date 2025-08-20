@@ -29,3 +29,41 @@ func FormatForConfluenceCodeMacro(filePath string) (string, error) {
 
 	return xmlContent, nil
 }
+
+const (
+	// Macro templates
+	ActionListMacroTemplate = `<ac:task-list>
+		<ac:task>
+			<ac:task-status>%s</ac:task-status>
+			<ac:task-body><ac:structured-macro ac:name="status" ac:schema-version="1">
+				<ac:parameter ac:name="colour">Green</ac:parameter>
+				<ac:parameter ac:name="title">GOOD FOR RELEASE</ac:parameter>
+			</ac:structured-macro></ac:task-body>
+		</ac:task>
+		<ac:task>
+			<ac:task-status>%s</ac:task-status>
+			<ac:task-body><ac:structured-macro ac:name="status" ac:schema-version="1">
+				<ac:parameter ac:name="colour">Red</ac:parameter>
+				<ac:parameter ac:name="title">HOLD-OFF</ac:parameter>
+			</ac:structured-macro></ac:task-body>
+		</ac:task>
+	</ac:task-list>`
+
+	AttachmentMacroTemplate = `<p><ac:structured-macro ac:name="attachments" ac:schema-version="1"></ac:structured-macro></p>`
+)
+
+// function to create Task List macro for Overall Status with dynamic status based on test results
+func CreateActionItemMacro(failedCount, totalCount int) string {
+	if failedCount > 0 {
+		// Tests failed - HOLD-OFF should be checked
+		return fmt.Sprintf(ActionListMacroTemplate, "incomplete", "complete")
+	} else {
+		// All tests passed - GOOD FOR RELEASE should be checked
+		return fmt.Sprintf(ActionListMacroTemplate, "complete", "incomplete")
+	}
+}
+
+// function to create attachment macro
+func CreateAttachmentMacro() string {
+	return AttachmentMacroTemplate
+}
