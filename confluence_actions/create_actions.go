@@ -56,6 +56,33 @@ func parseTestResultsFromHTML(htmlContent string) (failedCount, totalCount int) 
 	return failedCount, totalCount
 }
 
+// Helper function to create update page payload
+func createUpdatePagePayload(pageId string, title string, newBody string, version int, message string) req.UpdatePagePayload {
+	return req.UpdatePagePayload{
+		ID:      pageId,
+		Status:  "current",
+		Title:   title,
+		Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
+		Version: req.UpdatePageVersion{Number: version, Message: message},
+	}
+}
+
+// Helper function to update page with attachment macro
+func updatePageWithAttachmentMacro(pageId string, currentPage req.CreatePageResult, attachmentMacro string, message string) error {
+	newBody := currentPage.Body.Storage.Value + attachmentMacro
+
+	payload := createUpdatePagePayload(pageId, currentPage.Title, newBody, currentPage.Version.Number+1, message)
+
+	log.Info("Updating page with new version:", currentPage.Version.Number+1)
+	embedResp, err := http_request.UpdateConfluencePage(pageId, payload)
+	if err != nil || embedResp.StatusCode() >= 300 {
+		return fmt.Errorf("adding attachment macro failed")
+	}
+
+	log.Info("Attachment macro enabled successfully")
+	return nil
+}
+
 func CreatePageAction(c *cli.Context) error {
 	spaceId := c.String("space-id")
 	if spaceId == "" {
@@ -92,7 +119,7 @@ func CreatePageAction(c *cli.Context) error {
 	}
 	// If neither is provided, contentPage remains empty string
 
-	// Log content trước khi tạo page
+	// Log content before creating page
 	log.Info("Content length:", len(contentPage))
 
 	// Create the page
@@ -203,55 +230,17 @@ func CreatePageAction(c *cli.Context) error {
 				log.Info("Macro status check - Attachment:", hasAttachmentMacro, "Action List:", hasActionListMacro)
 
 				// Pattern to find Overall Status row - support td with content
-				// Match td có content bên trong, không cần closing tag
+				// Match td with content inside, no closing tag needed
 				overallStatusPattern := `<td><strong>Overall Status</strong></td>\s*<td colspan=['"]2['"]>`
 
 				re := regexp.MustCompile(overallStatusPattern)
 
 				if re.MatchString(currentBody) {
 					log.Info("Overall Status pattern matched - adding attachment macro")
-
-					// Chỉ thêm attachment macro vào cuối, không thay thế Overall Status
-					newBody := currentPage.Body.Storage.Value + attachmentMacro
-
-					// Update page với newBody
-					payload := req.UpdatePagePayload{
-						ID:      createdPageId,
-						Status:  "current",
-						Title:   currentPage.Title,
-						Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
-						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Added attachment macro"},
-					}
-
-					log.Info("Updating page with new version:", currentPage.Version.Number+1)
-					embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
-					if err != nil || embedResp.StatusCode() >= 300 {
-						return fmt.Errorf("adding attachment macro failed")
-					}
-					log.Info("Attachment macro enabled successfully")
-					return nil
+					return updatePageWithAttachmentMacro(createdPageId, currentPage, attachmentMacro, "Added attachment macro")
 				} else {
 					log.Info("Overall Status pattern not matched - adding attachment macro to end")
-
-					// Fallback: thêm attachment macro vào cuối
-					newBody := currentPage.Body.Storage.Value + attachmentMacro
-
-					// Update page với newBody
-					payload := req.UpdatePagePayload{
-						ID:      createdPageId,
-						Status:  "current",
-						Title:   currentPage.Title,
-						Body:    req.UpdatePageBody{Representation: "storage", Value: newBody},
-						Version: req.UpdatePageVersion{Number: currentPage.Version.Number + 1, Message: "Added attachment macro via fallback"},
-					}
-
-					log.Info("Updating page with new version:", currentPage.Version.Number+1)
-					embedResp, err := http_request.UpdateConfluencePage(createdPageId, payload)
-					if err != nil || embedResp.StatusCode() >= 300 {
-						return fmt.Errorf("adding attachment macro failed")
-					}
-					log.Info("Attachment macro enabled successfully via fallback")
-					return nil
+					return updatePageWithAttachmentMacro(createdPageId, currentPage, attachmentMacro, "Added attachment macro via fallback")
 				}
 			}
 		} else {
